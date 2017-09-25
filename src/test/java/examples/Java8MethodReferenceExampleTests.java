@@ -103,6 +103,7 @@ public class Java8MethodReferenceExampleTests {
 
 		assertThat(personWrapper).isNotNull();
 		assertThat(personWrapper.getPerson()).isNull();
+		assertThat(personWrapper.getName()).isEqualTo("Jon Doe");
 
 		personWrapper.getUnsafeName();
 	}
