@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package examples;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +26,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.cp.elements.io.IOUtils;
+import org.cp.elements.lang.ObjectUtils;
 import org.cp.elements.lang.StringUtils;
 import org.cp.elements.lang.annotation.Immutable;
 import org.junit.Test;
@@ -37,7 +37,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
- * The {@link Java8MethodReferenceExampleTests} class is an example of perhaps one fundamental misconception
+ * The {@link Java8MethodReferenceExampleUnitTests} class is an example of perhaps one fundamental misconception
  * with Java 8 Lambdas vs. Method References.
  *
  * Below, I have defined a simple {@link Person} class representing a named person.  The {@link Person} class
@@ -84,7 +84,7 @@ import lombok.RequiredArgsConstructor;
  * @see java.util.Optional
  * @since 1.0.0
  */
-public class Java8MethodReferenceExampleTests {
+public class Java8MethodReferenceExampleUnitTests {
 
 	@Test
 	public void withLambdaIsSafe() {
@@ -111,7 +111,7 @@ public class Java8MethodReferenceExampleTests {
 	@Test(expected = NullPointerException.class)
 	public void serializeDeserializeIsCorrect() throws IOException, ClassNotFoundException {
 
-		Person jonDoe = Person.newPerson("Jon Doe");
+		Person jonDoe = Person.as("Jon Doe");
 
 		PersonWrapper personWrapper = PersonWrapper.from(jonDoe);
 
@@ -135,13 +135,18 @@ public class Java8MethodReferenceExampleTests {
 		deserializedPersonWrapper.getUnsafeName();
 	}
 
+	@Getter
 	@Immutable
 	@EqualsAndHashCode
-	@RequiredArgsConstructor(staticName = "newPerson")
+	@RequiredArgsConstructor(staticName = "as")
 	static class Person {
 
-		@NonNull @Getter String name;
+		@NonNull
+		private final String name;
 
+		/**
+		 * @inheritDoc
+		 */
 		@Override
 		public String toString() {
 			return getName();
@@ -150,9 +155,9 @@ public class Java8MethodReferenceExampleTests {
 
 	static class PersonWrapper implements Serializable {
 
-		final transient Person person;
+		private final transient Person person;
 
-		String name;
+		private String name;
 
 		public static PersonWrapper from(Person person) {
 			return new PersonWrapper(person);
@@ -163,8 +168,7 @@ public class Java8MethodReferenceExampleTests {
 		}
 
 		private PersonWrapper(Person person) {
-			this.person = Optional.ofNullable(person)
-				.orElseThrow(() -> new IllegalArgumentException("Person is required"));
+			this.person = ObjectUtils.requireObject(person, "Person is required");
 		}
 
 		Person getPerson() {
@@ -181,7 +185,9 @@ public class Java8MethodReferenceExampleTests {
 		 * @see #getUnsafeName()
 		 */
 		public String getSafeName() {
-			return Optional.ofNullable(this.name).filter(StringUtils::hasText)
+
+			return Optional.ofNullable(this.name)
+				.filter(StringUtils::hasText)
 				.orElseGet(() -> this.person.getName());
 		}
 
@@ -194,7 +200,8 @@ public class Java8MethodReferenceExampleTests {
 		 * @see #getSafeName()
 		 */
 		public String getUnsafeName() {
-			return Optional.ofNullable(this.name).filter(StringUtils::hasText)
+			return Optional.ofNullable(this.name)
+				.filter(StringUtils::hasText)
 				.orElseGet(this.person::getName);
 		}
 
