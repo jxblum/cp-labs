@@ -8,7 +8,7 @@
   <parent>
     <groupId>org.codeprimate</groupId>
     <artifactId>cp-core</artifactId>
-    <version>1.2.0.RELEASE</version>
+    <version>1.7.0</version>
   </parent>
 
   <artifactId>cp-labs</artifactId>
@@ -71,7 +71,7 @@
   </issueManagement>
 
   <properties>
-    <cp-elements.version>1.0.0.SNAPSHOT</cp-elements.version>
+    <cp-elements.version>1.0.0-SNAPSHOT</cp-elements.version>
     <!--<cp-elements.version>1.0.0.M3</cp-elements.version>-->
   </properties>
 
