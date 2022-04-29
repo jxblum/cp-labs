@@ -71,6 +71,7 @@
   </issueManagement>
 
   <properties>
+    <java-module-name>org.codeprimate.labs</java-module-name>
     <cp-elements.version>1.0.0-M7</cp-elements.version>
   </properties>
 
