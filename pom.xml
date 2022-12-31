@@ -15,9 +15,9 @@
   <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>cp-labs</name>
+  <name>Codeprimate Labs</name>
   <description>
-    'Codeprimate Labs' (a.k.a. cp-labs) is a Java class library containing experimental code.
+    'Codeprimate Labs' is a Java library containing experimental code.
   </description>
   <inceptionYear>2017</inceptionYear>
   <url>http://www.codeprimate.org/projects/cp-labs</url>
