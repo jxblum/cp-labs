@@ -47,7 +47,8 @@ public class MockingInterfaceDefaultMethodsUnitTests {
     Cache<String, Object> mockCache = mock(Cache.class);
 
     doReturn(true).when(mockCache).contains(any());
-    doCallRealMethod().when(mockCache).containsAll(any());
+    //doCallRealMethod().when(mockCache).containsAll(any());
+    doCallRealMethod().when(mockCache).containsAll(any(String[].class));
 
     assertThat(mockCache.containsAll("KeyOne", "KeyTwo")).isTrue();
 
