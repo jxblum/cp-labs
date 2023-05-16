@@ -72,7 +72,7 @@
 
   <properties>
     <java-module-name>org.codeprimate.labs</java-module-name>
-    <cp-elements.version>1.0.0-RC2</cp-elements.version>
+    <cp-elements.version>1.0.2</cp-elements.version>
   </properties>
 
   <dependencies>
