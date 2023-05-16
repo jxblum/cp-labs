@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.Arrays;
-import java.util.stream.StreamSupport;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +42,7 @@ public class MockingInterfaceDefaultMethodsUnitTests {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void containsAllKeysReturnsTrue() {
+  public void cacheContainsAllKeysReturnsTrue() {
 
     Cache<String, Object> mockCache = mock(Cache.class);
 
@@ -59,17 +59,41 @@ public class MockingInterfaceDefaultMethodsUnitTests {
     verifyNoMoreInteractions(mockCache);
   }
 
-  @SuppressWarnings("unused")
-  interface Cache<KEY extends Comparable<KEY>, VALUE> extends Iterable<KEY> {
+  @Test
+  @SuppressWarnings("unchecked")
+  public void listContainsAllElementsReturnsTrue() {
 
-    default boolean contains(KEY key) {
-      return key != null && StreamSupport.stream(this.spliterator(), false)
-        .anyMatch(it -> it.equals(key));
-    }
+    ExtList<Object> mockList = mock(ExtList.class);
+
+    doReturn(true).when(mockList).contains(any());
+    doCallRealMethod().when(mockList).containsAll(any(Object[].class));
+
+    assertThat(mockList.containsAll("ONE", "TWO")).isTrue();
+
+    verify(mockList, times(1)).containsAll(eq("ONE"), eq("TWO"));
+
+    Arrays.asList("ONE", "TWO").forEach(element ->
+      verify(mockList, times(1)).contains(eq(element)));
+
+    verifyNoMoreInteractions(mockList);
+  }
+
+  @SuppressWarnings("unused")
+  interface Cache<KEY extends Comparable<KEY>, VALUE> {
+
+    boolean contains(KEY key);
 
     @SuppressWarnings("unchecked")
     default boolean containsAll(KEY... keys) {
       return Arrays.stream(keys).allMatch(this::contains);
+    }
+  }
+
+  interface ExtList<T> extends List<T> {
+
+    @SuppressWarnings("unchecked")
+    default boolean containsAll(T... elements) {
+      return Arrays.stream(elements).allMatch(this::contains);
     }
   }
 }
