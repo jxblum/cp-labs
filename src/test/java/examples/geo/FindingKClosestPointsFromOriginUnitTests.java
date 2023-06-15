@@ -78,10 +78,8 @@ public class FindingKClosestPointsFromOriginUnitTests {
   @RequiredArgsConstructor(staticName = "at")
   public static class Point implements Comparable<Point> {
 
-    @lombok.NonNull
     private final int x;
 
-    @lombok.NonNull
     private final int y;
 
     @Setter(AccessLevel.PACKAGE)
