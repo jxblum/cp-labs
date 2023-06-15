@@ -74,6 +74,7 @@
     <java.version>17</java.version>
     <java-module-name>org.codeprimate.labs</java-module-name>
     <cp-elements.version>2.0.0-M1</cp-elements.version>
+    <jmh.version>1.36</jmh.version>
   </properties>
 
   <dependencies>
@@ -82,11 +83,20 @@
       <artifactId>cp-elements</artifactId>
       <version>${cp-elements.version}</version>
     </dependency>
-
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+      <version>${jmh.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-generator-annprocess</artifactId>
+      <version>${jmh.version}</version>
     </dependency>
   </dependencies>
 
