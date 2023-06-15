@@ -7,6 +7,7 @@ etc/build
 etc/release
 lib/
 target/
+tmp/
 .DS_Store
 *.iws
 *.ipr
