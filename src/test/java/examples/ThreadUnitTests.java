@@ -16,15 +16,18 @@
 package examples;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.function.Function;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Unit Tests for {@link Thread}.
@@ -33,7 +36,7 @@ import org.mockito.junit.MockitoJUnitRunner;
  * @see java.lang.Thread
  * @since 1.0.0
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unused")
 public class ThreadUnitTests {
 
@@ -51,8 +54,11 @@ public class ThreadUnitTests {
   @Test
   public void threadNameIsCorrect() {
 
-    assertThat(newThread("TestThread", Mockito::spy).getName()).isEqualTo("TestThread");
+    Thread thread = newThread("TestThread", Mockito::spy);
 
+    assertThat(thread.getName()).isEqualTo("TestThread");
+
+    verify(thread, times(1)).getName();
     verifyNoInteractions(this.mockRunnable);
   }
 }
