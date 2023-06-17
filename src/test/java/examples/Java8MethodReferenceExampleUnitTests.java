@@ -16,20 +16,25 @@
 package examples;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.junit.jupiter.api.Test;
+
 import org.cp.elements.io.IOUtils;
 import org.cp.elements.lang.ObjectUtils;
 import org.cp.elements.lang.StringUtils;
 import org.cp.elements.lang.annotation.Immutable;
-import org.junit.Test;
+import org.cp.elements.lang.annotation.NotNull;
+import org.cp.elements.lang.annotation.Nullable;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -80,7 +85,7 @@ import lombok.RequiredArgsConstructor;
  * TODO do more (Java) research on Method References vs. Lambdas and look into the exact reason for this.
  *
  * @author John Blum
- * @see org.junit.Test
+ * @see org.junit.jupiter.api.Test
  * @see java.util.Optional
  * @since 1.0.0
  */
@@ -96,19 +101,25 @@ public class Java8MethodReferenceExampleUnitTests {
 		assertThat(personWrapper.getSafeName()).isEqualTo("Jon Doe");
 	}
 
-	@Test(expected = NullPointerException.class)
+	@Test
 	public void withMethodReferenceThrowsNullPointerException() {
 
-		PersonWrapper personWrapper = new PersonWrapper().with("Jon Doe");
+		assertThatNullPointerException()
+			.isThrownBy(() -> {
 
-		assertThat(personWrapper).isNotNull();
-		assertThat(personWrapper.getPerson()).isNull();
-		assertThat(personWrapper.getName()).isEqualTo("Jon Doe");
+				PersonWrapper personWrapper = new PersonWrapper().with("Jon Doe");
 
-		personWrapper.getUnsafeName();
+				assertThat(personWrapper).isNotNull();
+				assertThat(personWrapper.getPerson()).isNull();
+				assertThat(personWrapper.getName()).isEqualTo("Jon Doe");
+
+				personWrapper.getUnsafeName();
+
+			})
+			.withNoCause();
 	}
 
-	@Test(expected = NullPointerException.class)
+	@Test
 	public void serializeDeserializeIsCorrect() throws IOException, ClassNotFoundException {
 
 		Person jonDoe = Person.as("Jon Doe");
@@ -123,6 +134,9 @@ public class Java8MethodReferenceExampleUnitTests {
 
 		byte[] personWrapperBytes = IOUtils.serialize(personWrapper);
 
+		assertThat(personWrapperBytes).isNotNull();
+		assertThat(personWrapperBytes).isNotEmpty();
+
 		PersonWrapper deserializedPersonWrapper = IOUtils.deserialize(personWrapperBytes);
 
 		assertThat(deserializedPersonWrapper).isNotNull();
@@ -131,8 +145,9 @@ public class Java8MethodReferenceExampleUnitTests {
 		assertThat(deserializedPersonWrapper.getName()).isEqualTo("Jon Doe");
 		assertThat(deserializedPersonWrapper.getSafeName()).isEqualTo("Jon Doe");
 
-		// Throws NullPointerException
-		deserializedPersonWrapper.getUnsafeName();
+		assertThatNullPointerException()
+			.isThrownBy(deserializedPersonWrapper::getUnsafeName)
+			.withNoCause();
 	}
 
 	@Getter
@@ -144,9 +159,6 @@ public class Java8MethodReferenceExampleUnitTests {
 		@NonNull
 		private final String name;
 
-		/**
-		 * @inheritDoc
-		 */
 		@Override
 		public String toString() {
 			return getName();
@@ -155,65 +167,72 @@ public class Java8MethodReferenceExampleUnitTests {
 
 	static class PersonWrapper implements Serializable {
 
+		@Serial
+		private static final long serialVersionUID = -8144719778466453506L;
+
+		public static @NotNull PersonWrapper from(@NotNull Person person) {
+			return new PersonWrapper(person);
+		}
+
 		private final transient Person person;
 
 		private String name;
-
-		public static PersonWrapper from(Person person) {
-			return new PersonWrapper(person);
-		}
 
 		private PersonWrapper() {
 			this.person = null;
 		}
 
-		private PersonWrapper(Person person) {
+		private PersonWrapper(@NotNull Person person) {
 			this.person = ObjectUtils.requireObject(person, "Person is required");
 		}
 
-		Person getPerson() {
+		@Nullable Person getPerson() {
 			return this.person;
 		}
 
-		public String getName() {
+		@Nullable String getName() {
 			return this.name;
 		}
 
 		/**
-		 * Using a Java 8 Lambda is safe.
+		 * Using a {@literal Java 8 Lambda} is safe.
 		 *
 		 * @see #getUnsafeName()
 		 */
-		public String getSafeName() {
+		@SuppressWarnings("all")
+		String getSafeName() {
 
 			return Optional.ofNullable(this.name)
 				.filter(StringUtils::hasText)
-				.orElseGet(() -> this.person.getName());
+				.orElseGet(() -> getPerson().getName());
 		}
 
 		/**
-		 * A Java 8 Method Reference will throw a {@link NullPointerException} when {@code this.person}
-		 * is {@literal null}.  Therefore, a Java 8 Method Reference is not treated exactly like a Lambda
-		 * expression by the Java compiler when passed to a method (e.g. {@link Optional#orElseGet(Supplier)}
-		 * that accepts a {@link FunctionalInterface}.
+		 * A {@literal Java 8 Method Reference} will throw a {@link NullPointerException} when {@code this.person}
+		 * is {@literal null}. Therefore, a {@literal Java 8 Method Reference} is not treated exactly the same as
+		 * {@literal Lambda expressions} by the Java compiler when passed to a method,
+		 * such as {@link Optional#orElseGet(Supplier)} that accepts a {@link FunctionalInterface}.
 		 *
 		 * @see #getSafeName()
 		 */
-		public String getUnsafeName() {
+		String getUnsafeName() {
+
 			return Optional.ofNullable(this.name)
 				.filter(StringUtils::hasText)
-				.orElseGet(this.person::getName);
+				.orElseGet(getPerson()::getName);
 		}
 
-		private void writeObject(ObjectOutputStream outputStream) throws IOException {
-			outputStream.writeUTF(getUnsafeName());
-		}
-
+		@Serial
 		private void readObject(ObjectInputStream inputStream) throws IOException {
 			this.name = inputStream.readUTF();
 		}
 
-		private PersonWrapper with(String name) {
+		@Serial
+		private void writeObject(ObjectOutputStream outputStream) throws IOException {
+			outputStream.writeUTF(getUnsafeName());
+		}
+
+		private @NotNull PersonWrapper with(@Nullable String name) {
 			this.name = name;
 			return this;
 		}
