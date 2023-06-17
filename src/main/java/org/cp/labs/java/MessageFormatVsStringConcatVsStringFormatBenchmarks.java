@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codeprimate.lab.java;
+package org.cp.labs.java;
 
 import java.io.IOException;
 import java.text.MessageFormat;
