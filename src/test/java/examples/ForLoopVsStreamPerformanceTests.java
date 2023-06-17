@@ -21,8 +21,8 @@ import java.util.Arrays;
 import java.util.function.IntPredicate;
 import java.util.function.Supplier;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * Performance Tests comparing a {@literal for loop} with a {@link java.util.stream.Stream}.
@@ -37,7 +37,7 @@ public class ForLoopVsStreamPerformanceTests {
 
   private static final IntPredicate multipleOfFour = number -> Math.floorMod(number, 4) == 0;
 
-  @BeforeClass
+  @BeforeAll
   public static void initializeNumbers() {
 
     for (int number = 0; number < numbers.length; number++) {
