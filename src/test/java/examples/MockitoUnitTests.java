@@ -26,13 +26,13 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit Tests testing and asserting the behavior of Mockito 4.11 vs. 4.10 when mocking interfaces with default methods.
  *
  * @author John Blum
- * @see org.junit.Test
+ * @see org.junit.jupiter.api.Test
  * @see org.mockito.Mockito
  * @since 1.0.0
  */
