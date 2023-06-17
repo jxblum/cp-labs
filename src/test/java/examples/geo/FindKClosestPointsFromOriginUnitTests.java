@@ -39,7 +39,7 @@ import lombok.ToString;
  * @author John Blum
  * @since 1.0.0
  */
-public class FindingKClosestPointsFromOriginUnitTests {
+public class FindKClosestPointsFromOriginUnitTests {
 
   private final Point origin = Point.at(0, 0);
 
