@@ -44,44 +44,44 @@ import lombok.RequiredArgsConstructor;
 /**
  * The {@link Java8MethodReferenceExampleUnitTests} class is an example of perhaps one fundamental misconception
  * with Java 8 Lambdas vs. Method References.
- *
+ * <p>
  * Below, I have defined a simple {@link Person} class representing a named person.  The {@link Person} class
  * is deliberately not {@link Serializable}.  1 reason for this is that the {@link Person} class could very well
  * have represented an object that should not be serialized, like a network {@link Socket}.
- *
+ * <p>
  * I have also defined a {@link PersonWrapper} to "wrap" a {@link Person} and make it {@link Serializable}. 1 way to
  * fundamentally do this is to serialize the {@link Person Person's} constituent parts (i.e. properties),
  * like {@code name}.  When the {@link PersonWrapper} is deserialized, of course, the {@link Person} reference
  * will be {@literal null}.
- *
+ * <p>
  * To guard agains {@literal null} when the {@link Person} object referenece is {@literal null} in the wrapper
  * is to use Java 8's new {@link Optional} class.  For example, inside the {@link PersonWrapper} class...
- *
+ * <p>
  * <code>
  *     public String getName() {
  *         return Optional.ofNullable(this.name).orElseGet(this.person::getName);
  *     }
  * </code>
- *
+ * <p>
  * However, the problem with this use of {@link Optional} is that the Java 8 Method Reference is not directly
  * substitutable as a Java 8 Lambda and therefore results in a {@link NullPointerException} when {@code this.person}
  * is {@literal null}.
- *
+ * <p>
  * As such, a developer must take extra care to further protect against a possible {@link NullPointerException}
  * that s/he was probably looking to avoid with the use of the {@link Optional} class (though not necessarily)
  * in the first place...
- *
+ * <p>
  * <code>
  *     public String getName() {
  *         return Optional.ofNullable(this.name).orElseGet(() -> this.person.getName());
  *     }
  * </code>
- *
+ * <p>
  * Your IDE will most likely inform you that you can simplify the Lambda (i.e. {@code this.person.getName()})
  * into a Method Reference {@code this.person::getName}, but that is simply NOT the case!
- *
+ * <p>
  * This example goes to show that no amount of tests can prove a code correct, but only 1 test can prove it wrong!
- *
+ * <p>
  * TODO do more (Java) research on Method References vs. Lambdas and look into the exact reason for this.
  *
  * @author John Blum
