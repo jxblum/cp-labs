@@ -18,11 +18,14 @@ package org.cp.labs.data.struct;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -63,9 +66,13 @@ public class MapImplementationsPerformanceTests {
 
   private static final Map<Integer, Integer> arrayMap = new ArrayHashMap<>(INITIAL_CAPACITY);
 
+  private static final Map<Integer, Integer> concurrentMap = new ConcurrentHashMap<>();
+
   private static final Map<Integer, Integer> hashMap = new HashMap<>();
 
   private static final Map<Integer, Integer> map2d = TwoDimensionalMap.usingHashMapArray(INITIAL_CAPACITY);
+
+  private static final Map<Integer, Integer> synchronizedMap = Collections.synchronizedMap(new HashMap<>());
 
   private static final Map<Integer, Integer> treeMap = new TreeMap<>();
 
@@ -78,8 +85,10 @@ public class MapImplementationsPerformanceTests {
       int number = random.nextInt(SAMPLE_SIZE);
       numbers.add(number);
       arrayMap.put(number, number);
+      concurrentMap.put(number, number);
       hashMap.put(number, number);
       map2d.put(number, number);
+      synchronizedMap.put(number, number);
       treeMap.put(number, number);
     }
 
@@ -89,6 +98,10 @@ public class MapImplementationsPerformanceTests {
 
   @SuppressWarnings("rawtypes")
   private void measureMapGetPerformance(Function<Integer, Integer> mapGetFunction, Class<? extends Map> mapType) {
+    measureMapGetPerformance(mapGetFunction, mapType.getSimpleName());
+  }
+
+  private void measureMapGetPerformance(Function<Integer, Integer> mapGetFunction, String mapTypeName) {
 
     long t0 = System.currentTimeMillis();
 
@@ -98,7 +111,7 @@ public class MapImplementationsPerformanceTests {
     long t1 = System.currentTimeMillis();
 
     System.out.printf("Getting [%d] values from Map of type [%s] took [%d] milliseconds%n",
-      numbers.size(), mapType.getSimpleName(), t1 - t0);
+      numbers.size(), mapTypeName, t1 - t0);
 
     System.out.flush();
   }
@@ -109,8 +122,18 @@ public class MapImplementationsPerformanceTests {
   }
 
   @Test
+  public void measureConcurrentMapGet() {
+    measureMapGetPerformance(concurrentMap::get, ConcurrentMap.class);
+  }
+
+  @Test
   public void measureHashMapGet() {
     measureMapGetPerformance(hashMap::get, HashMap.class);
+  }
+
+  @Test
+  public void measureSynchronizedMapGet() {
+    measureMapGetPerformance(synchronizedMap::get, "SynchronizedMap");
   }
 
   @Test
