@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 public class RegexUnitTests {
 
   @Test
-  public void matchesRegex() {
+  public void abstractNonExceptionNonUtilClassMatchesRegex() {
 
     //Pattern pattern = Pattern.compile("^Abstract.+$");
     //Pattern pattern = Pattern.compile("^Abstract.+(?<!Exception|Util)$");
@@ -44,5 +44,18 @@ public class RegexUnitTests {
     assertThat(pattern.matcher("RuntimeException").matches()).isFalse();
     assertThat(pattern.matcher("AbstractItUtil").matches()).isFalse();
     assertThat(pattern.matcher("ZipUtil").matches()).isFalse();
+  }
+
+  @Test
+  public void testClassMatchesRegex() {
+
+    Pattern pattern = Pattern.compile("^(?!.*Tester).+(Test|Tests)$");
+
+    assertThat(pattern.matcher("ExampleUnitTests").matches()).isTrue();
+    assertThat(pattern.matcher("ExampleTests").matches()).isTrue();
+    assertThat(pattern.matcher("ExampleTest").matches()).isTrue();
+    assertThat(pattern.matcher("ExampleIntegrationTests").matches()).isTrue();
+    assertThat(pattern.matcher("Tester").matches()).isFalse();
+    assertThat(pattern.matcher("ConnectionTester").matches()).isFalse();
   }
 }
