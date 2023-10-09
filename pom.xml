@@ -73,11 +73,18 @@
 
   <properties>
     <java-module-name>org.codeprimate.labs</java-module-name>
+    <awaitility.version>4.2.0</awaitility.version>
     <cp-elements.version>2.0.0-M2</cp-elements.version>
     <jmh.version>1.36</jmh.version>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <version>${awaitility.version}</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.codeprimate</groupId>
       <artifactId>elements</artifactId>
