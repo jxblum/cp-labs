@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-Present Author or Authors.
+ * Copyright 2017-Present Author or Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,5 +80,10 @@ public class MessageFormatVsStringConcatVsStringFormatBenchmarks {
   @Benchmark
   public void stringFormatBench(Blackhole blackhole) {
     blackhole.consume(String.format("test %d", this.count++));
+  }
+
+  @Benchmark
+  public void stringFormattedBench(Blackhole blackhole) {
+    blackhole.consume("test %d".formatted(this.count++));
   }
 }
