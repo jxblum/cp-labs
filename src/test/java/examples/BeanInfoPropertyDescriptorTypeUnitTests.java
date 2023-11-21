@@ -51,7 +51,9 @@ public class BeanInfoPropertyDescriptorTypeUnitTests {
     assertThat(namePropertyDescriptor.getPropertyType()).isEqualTo(String.class);
   }
 
-  interface Person extends Nameable<String> { }
+  interface Person extends Nameable<String> {
+    //@Override String getName(); // Cause Java (JRE) 21 to fail!
+  }
 
   static class Customer implements Person {
 
