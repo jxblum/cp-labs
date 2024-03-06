@@ -41,9 +41,10 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Unit Tests for {@literal Meta's Dog Breeds Problem}
+ * Unit Tests for {@literal Meta's Dog Breeds Problem}.
  *
  * @author John Blum
+ * @see org.junit.jupiter.api.Test
  * @since 1.0.0
  */
 @SuppressWarnings("unused")

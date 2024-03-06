@@ -24,9 +24,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 /**
- * Unit Tests for {@literal Meta's Uniform Integers Problem}
+ * Unit Tests for {@literal Meta's Uniform Integers Problem}.
  *
  * @author John Blum
+ * @see org.junit.jupiter.api.Test
  * @since 1.0.0
  */
 @Getter(AccessLevel.PROTECTED)
@@ -209,4 +210,3 @@ public class UniformIntegersUnitTests {
 		}
 	}
 }
-
