@@ -36,6 +36,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import org.cp.elements.lang.StringUtils;
 
@@ -55,6 +56,7 @@ import lombok.ToString;
  */
 @SuppressWarnings("unused")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@DisabledIfSystemProperty(named = "cp.jvm.runtime.env", matches = "MAVEN")
 public class SecondLargestNumberUnitTests {
 
 	private static final boolean LOG_INFO = true;
@@ -264,12 +266,14 @@ public class SecondLargestNumberUnitTests {
 	// UPDATE: I think it has to do with how much JVM Heap space is left. Once the data starts approaching
 	// max Heap size, the perf significantly (and noticeably) drops; more testing, analysis and measurements
 	// are needed.
+	// Using JMH would be beneficial so that the JVM does not have a change to warm up between test cases.
 	@Test
 	@Order(11)
 	void testCaseEleven() {
 
 		//int[][] array = time("NEW ARRAY", () -> newDoubleArray(5, 1_000_000_000));
-		int[][] array = time("NEW ARRAY", () -> newDoubleArray(10, 500_000_000));
+		//int[][] array = time("NEW ARRAY", () -> newDoubleArray(10, 500_000_000));
+		int[][] array = time("NEW ARRAY", () -> newDoubleArray(10, 100_000_000));
 
 		Pair pair = time("RESULT", () -> this.solution.findLargestAndSecondLargestNumber(array));
 		Pair answer = time("ANSWER", () -> this.answer.answer(array));
@@ -408,13 +412,16 @@ public class SecondLargestNumberUnitTests {
 
 	// MultiThreaded Solution with the array sizes that I am working with are meh!
 	// The sequential solution is much more efficient in both time and space complexity.
-	// I would need to test more, but I think the array sizes would need to be ridiculously large, for example:
+	// It is also possible the array elements are non-contiguous in memory, thereby affecting performance.
+	// I would need to test more, but I think the array sizes would need to be ridiculously large
+	// for the multi-Threaded solution over the single-Threaded, sequential solution to start showing benefits,
+	// For example:
 	// 1 billion rows & 1 billion columns
 	// int[1_000_000_000][1_000_000_000]
 	@Getter
 	static class MultiThreadedSolution extends SolutionOne {
 
-		private static final int THRESHOLD = 100_000_000;
+		private static final int THRESHOLD = 50_000_000;
 
 		private final int availableProcessors;
 
