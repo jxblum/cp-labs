@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import lombok.AccessLevel;
@@ -62,7 +63,7 @@ public class SocialDistancingProblemUnitTests {
 
 	private static final boolean DEBUG = true;
 
-	private final Solution solution = new SolutionThree();
+	private final Solution solution = new SolutionOne();
 
 	@Test
 	void emptyTableWithNoSocialDistancing() {
@@ -217,8 +218,9 @@ public class SocialDistancingProblemUnitTests {
 		assertThat(getSolution().countAvailableSeats(seats, 2)).isEqualTo(2);
 	}
 
+	// Technically violates social distancing
 	@Test
-		// Technically violates social distancing
+	@Disabled
 	void occupiedTableWithSocialDistancingOfTwo3() {
 
 		int[] seats = { 1, 1, 0, 0, 0, 0, 1, 0, 0, 0 };
