@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -84,6 +85,40 @@ public class SpreadsheetUnitTests {
 	}
 
 	@Test
+	void getCellValueWithComplexExpression() {
+
+		this.spreadsheet.setCellValue("A1", "=10/2+35*2-45");
+
+		int expectedValue = 10 / 2 + 35 * 2 - 45;
+
+		assertThat(this.spreadsheet.getCellValue("A1")).isEqualTo(expectedValue);
+	}
+
+	@Test
+	void getCellValueWithMathematicalOperationAppliedToCellReferences() {
+
+		this.spreadsheet.setCellValue("A1", 10);
+		this.spreadsheet.setCellValue("B2", 20);
+		this.spreadsheet.setCellValue("D4", "=A1*B2+C3");
+		this.spreadsheet.setCellValue("E5", "=B2*C3");
+
+		assertThat(this.spreadsheet.getCellValue("D4")).isEqualTo(200);
+		assertThat(this.spreadsheet.getCellValue("E5")).isZero();
+	}
+
+	@Test
+	void divideByZero() {
+
+		this.spreadsheet.setCellValue("A1", 10);
+		this.spreadsheet.setCellValue("B2", "=A1/C3");
+
+		assertThatExceptionOfType(ArithmeticException.class)
+			.isThrownBy(() -> this.spreadsheet.getCellValue("B2"))
+			.withMessage("/ by zero")
+			.withNoCause();
+	}
+
+	@Test
 	void whenCellValueIsUpdated() {
 
 		this.spreadsheet.setCellValue("A1", 12);
@@ -105,13 +140,13 @@ public class SpreadsheetUnitTests {
 		this.spreadsheet.setCellValue("B15", "=B14/10-7");
 		this.spreadsheet.setCellValue("C15", "=B15/10+7+B12/2*3+1");
 
-		int expectedValue = ((14 + 356) / 10 - 7) / 10 + 7 + 14/2 * 3 + 1;
+		int expectedValue = ((14 + 356) / 10 - 7) / 10 + 7 + 14 / 2 * 3 + 1;
 
 		assertThat(this.spreadsheet.getCellValue("C15")).isEqualTo(expectedValue);
 
 		this.spreadsheet.setCellValue("B13", 456);
 
-		expectedValue = ((14 + 456) / 10 - 7) / 10 + 7 + 14/2 * 3 + 1;
+		expectedValue = ((14 + 456) / 10 - 7) / 10 + 7 + 14 / 2 * 3 + 1;
 
 		assertThat(this.spreadsheet.getCellValue("C15")).isEqualTo(expectedValue);
 
@@ -122,8 +157,8 @@ public class SpreadsheetUnitTests {
 			.isThrownBy(() -> this.spreadsheet.getCellValue("B14"))
 			.withMessage("...")
 			.withNoCause();
-
 	}
+
 	/*
 	PROBLEM:
 
@@ -206,14 +241,14 @@ public class SpreadsheetUnitTests {
 
 			for (char character : cellId.toCharArray()) {
 				if (IS_DIGIT_OR_LETTER.negate().test(character)) {
-					throw new IllegalArgumentException("ID [%] is not a value cell reference");
+					throw new IllegalArgumentException("[%] is not a valid cell ID/reference");
 				}
 			}
 		}
 
 		void assertCellValue(Object value) {
 
-			Assert.notNull(value, "Value must not be null");
+			Assert.notNull(value, "Value is required");
 
 			String stringValue = asString(value);
 
@@ -229,12 +264,13 @@ public class SpreadsheetUnitTests {
 		}
 
 		String asString(Object value) {
-			Assert.notNull(value, "Value must not be null");
-			return String.valueOf(value).trim();
+			Assert.notNull(value, "Value is required");
+			return value instanceof String string ? string
+				: String.valueOf(value).trim();
 		}
 
 		boolean isCellReference(String value) {
-			return isSet(value) && Character.isLetter(value.charAt(0));
+			return isSet(value) && IS_LETTER.test(value.charAt(0));
 		}
 
 		boolean isExpression(Object value) {
@@ -249,6 +285,8 @@ public class SpreadsheetUnitTests {
 						return false;
 					}
 				}
+
+				return true;
 			}
 
 			return false;
@@ -279,7 +317,7 @@ public class SpreadsheetUnitTests {
 			StringBuilder trimmedValue = new StringBuilder();
 
 			for (char element : value.trim().toCharArray()) {
-				if (!IS_WHITESPACE.test(element)) {
+				if (IS_WHITESPACE.negate().test(element)) {
 					trimmedValue.append(element);
 				}
 			}
@@ -311,7 +349,7 @@ public class SpreadsheetUnitTests {
 				String stringValue = trimAllWhitespace(asString(cellValue));
 
 				if (isExpression(stringValue)) {
-					// remove expression operator "="
+					// trim expression operator "="
 					stringValue = stringValue.substring(1);
 				}
 
@@ -337,7 +375,7 @@ public class SpreadsheetUnitTests {
 				Expression expression = null;
 
 				for (String subExpression : operatorSplitExpressions) {
-					expression = operator.compose(expression, parseExpression(subExpression, operator.getOperator()));
+					expression = operator.compose(expression, parseExpression(subExpression, operator.getNext()));
 				}
 
 				return expression;
@@ -420,27 +458,35 @@ public class SpreadsheetUnitTests {
 		SUBTRACT('-', (valueOne, valueTwo) -> valueOne - valueTwo, MULTIPLY),
 		ADD('+', Integer::sum, SUBTRACT);
 
-		static boolean isOperator(Character value) {
-
-			return value != null && Set.of(ADD, SUBTRACT, MULTIPLY, DIVIDE).stream()
+		private static final Predicate<Character> IS_OPERATOR = Operators.<Character>notNull().and(character ->
+			Set.of(ADD, SUBTRACT, MULTIPLY, DIVIDE).stream()
 				.map(Operators::getSymbol)
 				.toList()
-				.contains(value);
-		}
+				.contains(character));
 
-		static boolean containsOperator(String expression) {
-
-			return Set.of(ADD, SUBTRACT, MULTIPLY, DIVIDE).stream()
+		private static final Predicate<String> CONTAINS_OPERATOR = expression ->
+			Set.of(ADD, SUBTRACT, MULTIPLY, DIVIDE).stream()
 				.map(Operators::getSymbol)
 				.map(String::valueOf)
 				.anyMatch(operator -> String.valueOf(expression).contains(operator));
+
+		private static <T> Predicate<T> notNull() {
+			return Objects::nonNull;
+		}
+
+		static boolean isOperator(Character value) {
+			return IS_OPERATOR.test(value);
+		}
+
+		static boolean containsOperator(String expression) {
+			return CONTAINS_OPERATOR.test(expression);
 		}
 
 		private final char symbol;
 
 		private final BiFunction<Integer, Integer, Integer> mathFunction;
 
-		private final Operators operator;
+		private final Operators next;
 
 		Expression compose(Expression one, Expression two) {
 			return CompositeExpression.compose(one, two, this);
@@ -456,7 +502,7 @@ public class SpreadsheetUnitTests {
 
 		@Override
 		public String toString() {
-			return String.valueOf(getSymbol());
+			return Character.toString(getSymbol());
 		}
 	}
 
