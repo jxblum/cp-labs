@@ -415,14 +415,14 @@ public class SpreadsheetUnitTests {
 	@Getter(AccessLevel.PROTECTED)
 	enum Operators {
 
-		DIVISION('/', (valueOne, valueTwo) -> valueOne / valueTwo, null),
-		MULTIPLICATION('*', (valueOne, valueTwo) -> valueOne * valueTwo, DIVISION),
-		SUBTRACT('-', (valueOne, valueTwo) -> valueOne - valueTwo, MULTIPLICATION),
+		DIVIDE('/', (valueOne, valueTwo) -> valueOne / valueTwo, null),
+		MULTIPLY('*', (valueOne, valueTwo) -> valueOne * valueTwo, DIVIDE),
+		SUBTRACT('-', (valueOne, valueTwo) -> valueOne - valueTwo, MULTIPLY),
 		ADD('+', Integer::sum, SUBTRACT);
 
 		static boolean isOperator(Character value) {
 
-			return value != null && Set.of(ADD, SUBTRACT, MULTIPLICATION, DIVISION).stream()
+			return value != null && Set.of(ADD, SUBTRACT, MULTIPLY, DIVIDE).stream()
 				.map(Operators::getSymbol)
 				.toList()
 				.contains(value);
@@ -430,7 +430,7 @@ public class SpreadsheetUnitTests {
 
 		static boolean containsOperator(String expression) {
 
-			return Set.of(ADD, SUBTRACT, MULTIPLICATION, DIVISION).stream()
+			return Set.of(ADD, SUBTRACT, MULTIPLY, DIVIDE).stream()
 				.map(Operators::getSymbol)
 				.map(String::valueOf)
 				.anyMatch(operator -> String.valueOf(expression).contains(operator));
@@ -451,7 +451,7 @@ public class SpreadsheetUnitTests {
 		}
 
 		String regex() {
-			return Set.of(ADD, MULTIPLICATION).contains(this) ? "\\".concat(toString()) : toString();
+			return Set.of(ADD, MULTIPLY).contains(this) ? "\\".concat(toString()) : toString();
 		}
 
 		@Override
