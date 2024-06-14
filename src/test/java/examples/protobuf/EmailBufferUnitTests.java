@@ -21,6 +21,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 
+import com.google.protobuf.util.JsonFormat;
+
 import io.codeprimate.example.model.proto.EmailBuffer;
 
 import org.junit.jupiter.api.Test;
@@ -37,11 +39,11 @@ public class EmailBufferUnitTests {
 	private static final boolean DEBUG = false;
 
 	@Test
-	void writeAndReadEmailBuffer() throws IOException {
+	void writeAndReadEmail() throws IOException {
 
 		EmailBuffer.Email email = EmailBuffer.Email.newBuilder()
-			.setFrom(newEmailAddress("jonDoe", "home.com"))
 			.setTo(newEmailAddress("pieDoe", "work.com"))
+			.setFrom(newEmailAddress("jonDoe", "home.com"))
 			.setSubject("Test Email")
 			.setMessage("This is a test! Are you receiving?")
 			.build();
@@ -51,13 +53,33 @@ public class EmailBufferUnitTests {
 		byte[] serializedEmail = email.toByteArray();
 		byte[] javaSerializedEmail = javaSerialize(email);
 
-		log("Protobuf Serialized Byte Size [%d]; Java Serialized Byte Size [%d]",
+		log("Protobuf Serialized Byte Size [%d]; Java Serialized Byte Size [%d]%n",
 			serializedEmail.length, javaSerializedEmail.length);
 
 		EmailBuffer.Email deserializedEmail = EmailBuffer.Email.parseFrom(serializedEmail);
 
-		assertThat(deserializedEmail).isNotNull().isNotSameAs(email);
-		assertThat(deserializedEmail).isEqualTo(email);
+		assertThat(deserializedEmail).isNotNull().isNotSameAs(email).isEqualTo(email);
+	}
+
+	@Test
+	void writeAndReadMessageAsJson() throws IOException {
+
+		EmailBuffer.Email email = EmailBuffer.Email.newBuilder()
+			.setTo(newEmailAddress("bettyCrocker", "food.com"))
+			.setFrom(newEmailAddress("gordonRamsey", "hells-kitchen.com"))
+			.setSubject("Your Food Sucks Betty!")
+			.setMessage("I want a refund!")
+			.build();
+
+		String json = toJson(email);
+
+		assertThat(json).isNotBlank();
+
+		log("Email JSON [%s]%n", json);
+
+		EmailBuffer.Email emailFromJson = fromJson(json);
+
+		assertThat(emailFromJson).isNotNull().isNotSameAs(email).isEqualTo(email);
 	}
 
 	private void log(String message, Object... args) {
@@ -65,10 +87,6 @@ public class EmailBufferUnitTests {
 			System.err.printf(message, args);
 			System.err.flush();
 		}
-	}
-
-	private EmailBuffer.Email.Address newEmailAddress(String name, String domain) {
-		return EmailBuffer.Email.Address.newBuilder().setName(name).setDomain(domain).build();
 	}
 
 	private byte[] javaSerialize(Object target) throws IOException {
@@ -80,5 +98,19 @@ public class EmailBufferUnitTests {
 		}
 
 		return arrayOutput.toByteArray();
+	}
+
+	private EmailBuffer.Email.Address newEmailAddress(String name, String domain) {
+		return EmailBuffer.Email.Address.newBuilder().setName(name).setDomain(domain).build();
+	}
+
+	private String toJson(EmailBuffer.Email email) throws IOException {
+		return JsonFormat.printer().print(email);
+	}
+
+	private EmailBuffer.Email fromJson(String json) throws IOException {
+		EmailBuffer.Email.Builder emailBuilder = EmailBuffer.Email.newBuilder();
+		JsonFormat.parser().merge(json, emailBuilder);
+		return emailBuilder.build();
 	}
 }
