@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package io.codeprimate.example.model.proto;
+
+option java_outer_classname = "EmailBuffer";
+
+message Email {
+  message Address {
+    string name = 1;
+    string domain = 2;
+  }
+  enum Priority {
+    NORMAL = 0;
+    HIGH = 1;
+    LOW = 2;
+  }
+  Address from = 1;
+  Address to = 2;
+  string subject = 3;
+  string message = 4;
+  optional Priority priority = 5;
+}
