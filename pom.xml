@@ -76,7 +76,10 @@
 		<awaitility.version>4.2.0</awaitility.version>
 		<cp-elements.version>2.0.0-SNAPSHOT</cp-elements.version>
 		<jmh.version>1.36</jmh.version>
+		<os-maven-plugin.version>1.7.1</os-maven-plugin.version>
 		<protobuf.version>4.27.1</protobuf.version>
+		<protoc.version>${protobuf.version}</protoc.version>
+		<protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
 	</properties>
 
 	<dependencies>
@@ -119,6 +122,13 @@
 	</dependencies>
 
 	<build>
+		<extensions>
+			<extension>
+				<groupId>kr.motd.maven</groupId>
+				<artifactId>os-maven-plugin</artifactId>
+				<version>${os-maven-plugin.version}</version>
+			</extension>
+		</extensions>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
