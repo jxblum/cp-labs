@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package io.codeprimate.example.app.proto.hello;
+
+option java_multiple_files = true;
+option java_outer_classname = "HelloProto";
+
+service HelloServer {
+  rpc SayHello(HelloRequest) returns (HelloResponse) {}
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloResponse {
+  string message = 1;
+}
