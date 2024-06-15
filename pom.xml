@@ -75,6 +75,7 @@
 		<java-module-name>org.codeprimate.labs</java-module-name>
 		<awaitility.version>4.2.0</awaitility.version>
 		<cp-elements.version>2.0.0-SNAPSHOT</cp-elements.version>
+		<grpc.verson>1.64.0</grpc.verson>
 		<jmh.version>1.36</jmh.version>
 		<os-maven-plugin.version>1.7.1</os-maven-plugin.version>
 		<protobuf.version>4.27.1</protobuf.version>
@@ -95,11 +96,6 @@
 			<version>${cp-elements.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.openjdk.jmh</groupId>
 			<artifactId>jmh-core</artifactId>
 			<version>${jmh.version}</version>
@@ -110,6 +106,22 @@
 			<version>${jmh.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-netty-shaded</artifactId>
+			<version>${grpc.verson}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-protobuf</artifactId>
+			<version>${grpc.verson}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-stub</artifactId>
+			<version>${grpc.verson}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
 			<version>${protobuf.version}</version>
@@ -118,6 +130,11 @@
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java-util</artifactId>
 			<version>${protobuf.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
