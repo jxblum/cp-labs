@@ -82,6 +82,7 @@
 		<protobuf.version>4.27.1</protobuf.version>
 		<protoc.version>${protobuf.version}</protoc.version>
 		<protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
+		<spring-boot.version>3.3.1</spring-boot.version>
 		<tomcat-annotations-api.version>6.0.53</tomcat-annotations-api.version>
 	</properties>
 
@@ -91,6 +92,13 @@
 				<groupId>io.grpc</groupId>
 				<artifactId>grpc-bom</artifactId>
 				<version>${grpc.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${spring-boot.version}</version>
 				<scope>import</scope>
 				<type>pom</type>
 			</dependency>
@@ -128,6 +136,10 @@
 			<version>${jmh.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-couchbase</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>io.grpc</groupId>
 			<artifactId>grpc-protobuf</artifactId>
 		</dependency>
@@ -160,9 +172,8 @@
 			<version>${protobuf.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<scope>test</scope>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
@@ -181,6 +192,13 @@
 			</extension>
 		</extensions>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<parameters>true</parameters>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>

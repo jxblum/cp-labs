@@ -1,0 +1,41 @@
+package examples.couchbase;
+
+import java.util.UUID;
+
+import org.cp.elements.lang.StringUtils;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.couchbase.core.mapping.Document;
+import org.springframework.data.couchbase.core.mapping.Field;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+/**
+ * @author Joh Blum
+ */
+@Getter
+@Document
+@ToString(of = "name")
+@EqualsAndHashCode(of = { "name" })
+@SuppressWarnings("unused")
+public class User {
+
+	public static User named(String name) {
+		User user = new User();
+		user.name = StringUtils.requireText(name, "Name [%s] is required");
+		return user;
+	}
+
+	@Id
+	@Setter
+	private UUID id;
+
+	@Field
+	@Setter
+	private Boolean active = true;
+
+	private String name;
+
+}
