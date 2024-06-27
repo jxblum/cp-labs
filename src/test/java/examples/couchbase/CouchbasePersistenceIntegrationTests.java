@@ -84,6 +84,36 @@ public class CouchbasePersistenceIntegrationTests {
 		assertThat(actualUsers).containsAll(expectedUsers);
 	}
 
+	@Test
+	void persistUserWithRoles() {
+
+		User jonDoe = User.named("LanDoe")
+			.add(Role.asExecuteUser())
+			.add(Role.asReadWriteDeveloper());
+
+		getUserRepository().save(identify(jonDoe));
+
+		User loadedJonDoe = getUserRepository().findByName(jonDoe.getName());
+
+		assertThat(loadedJonDoe).isNotNull().isNotSameAs(jonDoe).isEqualTo(jonDoe);
+		assertThat(loadedJonDoe.getRoles()).containsAll(List.of(Role.asExecuteUser(), Role.asReadWriteDeveloper()));
+	}
+
+	@Test
+	void persistUserWithRolesUsingTemplate() {
+
+		User jonDoe = User.named("JoeDoe")
+			.add(Role.asExecuteUser())
+			.add(Role.asReadWriteDeveloper());
+
+		getCouchbaseTemplate().save(identify(jonDoe));
+
+		User loadedJonDoe = getCouchbaseTemplate().findByQuery(User.class).one().orElse(null);
+
+		assertThat(loadedJonDoe).isNotNull().isNotSameAs(jonDoe).isEqualTo(jonDoe);
+		assertThat(loadedJonDoe.getRoles()).containsAll(List.of(Role.asExecuteUser(), Role.asReadWriteDeveloper()));
+	}
+
 	private Iterable<User> identify(Iterable<User> users) {
 		StreamUtils.stream(users).forEach(this::identify);
 		return users;
