@@ -52,19 +52,29 @@ public class User {
 	@Field
 	private String name;
 
-	private List<Role> roles = new ArrayList<>();
+	//private List<Role> roles = new ArrayList<>();
+	private Object roles = new ArrayList<>();
+
+	public List<Role> getRoles() {
+		return asList(this.roles);
+	}
 
 	public User add(Role role) {
 
 		if (role != null) {
-			this.roles.add(role);
+			asList(this.roles).add(role);
 		}
 
 		return this;
 	}
 
 	public User remove(Role role) {
-		this.roles.remove(role);
+		asList(this.roles).remove(role);
 		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> List<T> asList(Object target) {
+		return ((List<T>) target);
 	}
 }
