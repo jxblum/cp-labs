@@ -15,6 +15,8 @@
  */
 package examples.couchbase;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.cp.elements.lang.StringUtils;
@@ -48,9 +50,21 @@ public class User {
 	private UUID id;
 
 	@Field
-	@Setter
-	private Boolean active = true;
-
 	private String name;
 
+	private List<Role> roles = new ArrayList<>();
+
+	public User add(Role role) {
+
+		if (role != null) {
+			this.roles.add(role);
+		}
+
+		return this;
+	}
+
+	public User remove(Role role) {
+		this.roles.remove(role);
+		return this;
+	}
 }
