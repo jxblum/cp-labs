@@ -51,6 +51,7 @@ public class SpringBootExternalConfigurationApplication {
 			.set("classpath.config.app.property", "PROGRAM_PROPERTIES")
 			.set("add.app.property", "PROGRAM_PROPERTIES")
 			.set("imported.add.app.property", "PROGRAM_PROPERTIES")
+			.set("command-line.app.property", "PROGRAM_PROPERTIES")
 			.set("environment.app.property", "PROGRAM_PROPERTIES")
 			.set("system.app.property", "PROGRAM_PROPERTIES")
 			.set("my.external.property", "PROGRAM_PROPERTIES")
@@ -75,6 +76,7 @@ public class SpringBootExternalConfigurationApplication {
 			@Value("${imported.add.app.property:DEFAULT_VALUE}") String importedAddAppProperty,
 			@Value("${environment.app.property:DEFAULT_VALUE}") String environmentAppProperty,
 			@Value("${system.app.property:DEFAULT_VALUE}") String systemAppProperty,
+			@Value("${command-line.app.property:DEFAULT_VALUE}") String commandLineAppProperty,
 			@Value("${my.external.property:DEFAULT_VALUE}") String myExternalProperty) {
 
 		return args -> {
@@ -87,6 +89,7 @@ public class SpringBootExternalConfigurationApplication {
 			log.info("imported.add.app.property is [{}]", importedAddAppProperty);
 			log.info("environment.app.property is [{}]", environmentAppProperty);
 			log.info("system.app.property is [{}]", systemAppProperty);
+			log.info("command-line.app.property is [{}]", commandLineAppProperty);
 			log.info("my.external.property is [{}]", myExternalProperty);
 		};
 	}
