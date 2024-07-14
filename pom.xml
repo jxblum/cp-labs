@@ -74,6 +74,7 @@
 	<properties>
 		<java-module-name>org.codeprimate.labs</java-module-name>
 		<awaitility.version>4.2.0</awaitility.version>
+		<cp-domain.version>0.2.0-SNAPSHOT</cp-domain.version>
 		<cp-elements.version>2.0.0-SNAPSHOT</cp-elements.version>
 		<grpc.version>1.64.0</grpc.version>
 		<guava.version>32.1.3-jre</guava.version>
@@ -128,6 +129,11 @@
 			<groupId>org.codeprimate</groupId>
 			<artifactId>elements</artifactId>
 			<version>${cp-elements.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codeprimate.domain</groupId>
+			<artifactId>cp-domain</artifactId>
+			<version>${cp-domain.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
