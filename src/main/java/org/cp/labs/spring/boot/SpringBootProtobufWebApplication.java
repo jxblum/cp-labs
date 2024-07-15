@@ -64,6 +64,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.jackson.JsonComponent;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
@@ -126,26 +127,17 @@ public class SpringBootProtobufWebApplication {
   }
 
   @SpringBootConfiguration
+  @Import({ PersonJsonSerializer.class, PersonJsonDeserializer.class })
   static class ApplicationConfiguration implements WebMvcConfigurer {
 
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
       converters.add(personMessageConverter(WriteStrategy.JSON));
     }
-
-    @Bean
-    PersonJsonSerializer personJsonSerializer() {
-      return new PersonJsonSerializer();
-    }
-
-    @Bean
-    PersonJsonDeserializer personJsonDeserializer() {
-      return new PersonJsonDeserializer();
-    }
   }
 
   @Bean
-  ApplicationRunner programRunner() {
+  ApplicationRunner programRunner(ObjectMapper objectMapper) {
 
     return applicationArguments -> {
 
@@ -154,11 +146,12 @@ public class SpringBootProtobufWebApplication {
         .asMale()
         .atVersion(UUID.randomUUID());
 
-      RestClient restClient = buildRestClient(PeopleResourceWriteStrategy.PROTOBUF);
+      PeopleResourceWriteStrategy resourceWriteStrategy = PeopleResourceWriteStrategy.PROTOBUF;
+
+      RestClient restClient = buildRestClient(objectMapper, resourceWriteStrategy);
 
       String webApplicationResponse = restClient.post()
-        .contentType(APPLICATION_BINARY_MEDIA_TYPE)
-        //.contentType(MediaType.APPLICATION_JSON)
+        .contentType(resourceWriteStrategy.getMediaType())
         .body(jonDoe)
         .exchange(httpResponseHandler());
 
@@ -171,38 +164,40 @@ public class SpringBootProtobufWebApplication {
     };
   }
 
+  private RestClient buildRestClient(ObjectMapper objectMapper, PeopleResourceWriteStrategy resourceWriteStrategy) {
+
+    return RestClient.builder()
+      .baseUrl(WEB_APPLICATION_BASE_URL.concat(resourceWriteStrategy.getResource()))
+      .messageConverters(httpMessageConverters ->
+        httpMessageConverters.add(0, personMessageConverter(resourceWriteStrategy.getWriteStrategy())))
+      .requestInterceptor(httpRequestHeaderInspectingInterceptor(objectMapper))
+      .build();
+  }
+
   private static String asResourceIdentifier(Person person) {
     return person.getFirstName().toLowerCase().concat(person.getLastName());
   }
 
-  public static LocalDateTime birthdate(int year, Month month, int day) {
+  private static Person assertPerson(Person person, String name) {
+
+    assertThat(person).isNotNull();
+    assertThat(person.getName()).hasToString(name);
+
+    return person;
+  }
+
+  private static LocalDateTime birthdate(int year, Month month, int day) {
     return LocalDate.of(year, month, day).atStartOfDay();
   }
 
-  private RestClient buildRestClient(PeopleResourceWriteStrategy resourceProcessingStrategy) {
-
-    return RestClient.builder()
-      .baseUrl(WEB_APPLICATION_BASE_URL.concat(resourceProcessingStrategy.getResource()))
-      .messageConverters(httpMessageConverters ->
-        httpMessageConverters.add(0, personMessageConverter(resourceProcessingStrategy.getWriteStrategy())))
-      .requestInterceptor(httpRequestHeaderInspectingInterceptor())
-      .build();
+  private static void log(String message, Object... arguments) {
+    System.out.printf(message, arguments);
+    System.out.flush();
   }
 
   private static HttpMessageConverter<Person> personMessageConverter(WriteStrategy writeStrategy) {
 
     return new AbstractHttpMessageConverter<>() {
-
-      private ObjectMapper newObjectMapper() {
-
-        SimpleModule personSerializationModule = new SimpleModule("PersonSerializationModule")
-          .addSerializer(Person.class, new PersonJsonSerializer())
-          .addDeserializer(Person.class, new PersonJsonDeserializer());
-
-        return JsonMapper.builder()
-          .addModule(personSerializationModule)
-          .build();
-      }
 
       private PersonSerializer getPersonSerializer() {
         return personSerializer;
@@ -221,7 +216,9 @@ public class SpringBootProtobufWebApplication {
       protected @NonNull Person readInternal(@NonNull Class<? extends Person> type,
           @NonNull HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
 
-        // READ only as a Protobuf message (server-side)
+        log("[DEBUG] Reading as Protobuf message");
+
+        // RECEIVE (read) as Protobuf message (server-side)
         byte[] data = IOUtils.toByteArray(inputMessage.getBody());
 
         return getPersonSerializer().deserialize(ByteBuffer.wrap(data));
@@ -231,55 +228,30 @@ public class SpringBootProtobufWebApplication {
       protected void writeInternal(@NonNull Person person, @NonNull HttpOutputMessage outputMessage)
           throws IOException, HttpMessageNotWritableException {
 
-        // SEND (write) as either JSON to Protobuf message (client-side)
-        switch (writeStrategy) {
-          case JSON:
-            writeAsJson(person, outputMessage);
-            break;
-          case PROTOBUF:
-            writeAsProtobufMessage(person, outputMessage);
-            break;
-          default:
-            throw newIllegalStateException("Failed to write Person [%s] to HTTP output message", person);
-        }
-      }
-
-      private void writeAsJson(Person person, HttpOutputMessage outputMessage) throws IOException {
-
-        OutputStream body = outputMessage.getBody();
-        String json = newObjectMapper().writeValueAsString(person);
-
-        body.write(json.getBytes());
-        body.flush();
-      }
-
-      private void writeAsProtobufMessage(Person person, HttpOutputMessage outputMessage) throws IOException {
-
-        byte[] data = getPersonSerializer().serialize(person).array();
-
-        OutputStream body = outputMessage.getBody();
-
-        body.write(data);
-        body.flush();;
+        // SEND (write) as either JSON or Protobuf message (client-side)
+        writeStrategy.write(person, outputMessage);
       }
     };
   }
 
-  private ClientHttpRequestInterceptor httpRequestHeaderInspectingInterceptor() {
+  private ClientHttpRequestInterceptor httpRequestHeaderInspectingInterceptor(ObjectMapper objectMapper) {
 
     return (request, body, execution) -> {
 
       HttpHeaders httpHeaders = request.getHeaders();
 
       assertThat(httpHeaders).isNotNull().isNotEmpty();
+      assertThat(body).isNotNull().isNotEmpty();
       assertThat(body.length).isEqualTo(Integers.asInteger(httpHeaders.getContentLength()));
 
-      Person person = personSerializer.deserialize(ByteBuffer.wrap(body));
-
-      assertThat(person).isNotNull();
-      assertThat(person.getName()).hasToString("Jon Doe");
-
-      System.out.printf("Person [%s]%n", person);
+      if (APPLICATION_BINARY_MEDIA_TYPE.equals(httpHeaders.getContentType())) {
+        Person person = assertPerson(personSerializer.deserialize(ByteBuffer.wrap(body)), "Jon Doe");
+        log("[PROTOBUF] Person [%s]%n", person);
+      }
+      else if (MediaType.APPLICATION_JSON.equals(httpHeaders.getContentType())) {
+        Person person = assertPerson(objectMapper.readValue(body, Person.class), "Jon Doe");
+        log("[JSON] Person [%s]%n", person);
+      }
 
       return execution.execute(request, body);
     };
@@ -291,9 +263,8 @@ public class SpringBootProtobufWebApplication {
   }
 
   private String throwRuntimeException(HttpRequest request, ClientHttpResponse response) throws IOException {
-    //throw newRuntimeException("Failed to send HTTP POST request to [%s]; status code [%s]",
-    //  request.getURI(), response.getStatusCode());
-    return null;
+    throw newRuntimeException("Failed to send HTTP POST request to [%s]; status code [%s]",
+      request.getURI(), response.getStatusCode());
   }
 
   private String toString(InputStream body) {
@@ -405,16 +376,61 @@ public class SpringBootProtobufWebApplication {
   @RequiredArgsConstructor
   enum PeopleResourceWriteStrategy {
 
-    JSON("/json/people", WriteStrategy.JSON),
-    PROTOBUF("/protobuf/people", WriteStrategy.PROTOBUF);
+    JSON(MediaType.APPLICATION_JSON, "/json/people", WriteStrategy.JSON),
+    PROTOBUF(APPLICATION_BINARY_MEDIA_TYPE, "/protobuf/people", WriteStrategy.PROTOBUF);
 
+    private final MediaType mediaType;
     private final String resource;
     private final WriteStrategy writeStrategy;
 
   }
 
   enum WriteStrategy {
-    JSON, PROTOBUF
+
+    JSON {
+
+      @Override
+      public void write(Person person, HttpOutputMessage outputMessage) throws IOException {
+
+        String json = newObjectMapper().writeValueAsString(person);
+        OutputStream body = outputMessage.getBody();
+
+        body.write(json.getBytes());
+        body.flush();
+      }
+
+      private ObjectMapper newObjectMapper() {
+
+        SimpleModule personSerializationModule = new SimpleModule("PersonSerializationModule")
+          .addSerializer(Person.class, new PersonJsonSerializer())
+          .addDeserializer(Person.class, new PersonJsonDeserializer());
+
+        return JsonMapper.builder()
+          .addModule(personSerializationModule)
+          .build();
+      }
+    },
+
+    PROTOBUF {
+
+      @Override
+      public void write(Person person, HttpOutputMessage outputMessage) throws IOException {
+
+        byte[] data = getPersonSerializer().serialize(person).array();
+        OutputStream body = outputMessage.getBody();
+
+        body.write(data);
+        body.flush();;
+      }
+
+      private PersonSerializer getPersonSerializer() {
+        return personSerializer;
+      }
+    };
+
+    public void write(Person person, HttpOutputMessage outputMessage) throws IOException {
+      throw newIllegalStateException("Failed to write Person [%s] and send in HTTP output message", person);
+    }
   }
 
   interface ThrowingRunnable {
