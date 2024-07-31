@@ -323,7 +323,7 @@ public class SpringBootProtobufWebApplication {
 
     @Override
     public void serialize(Person person, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
-      throws IOException {
+        throws IOException {
 
       jsonGenerator.writeStartObject();
       jsonGenerator.writeStringField("firstName", person.getFirstName());
