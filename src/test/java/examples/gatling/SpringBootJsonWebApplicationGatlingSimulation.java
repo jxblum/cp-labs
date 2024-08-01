@@ -23,13 +23,21 @@ import static io.gatling.javaapi.http.HttpDsl.http;
 import static io.gatling.javaapi.http.HttpDsl.status;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.util.UUID;
 
+import org.cp.elements.security.model.User;
 import org.springframework.http.MediaType;
 
 import io.gatling.javaapi.core.FeederBuilder;
 import io.gatling.javaapi.core.ScenarioBuilder;
 import io.gatling.javaapi.core.Simulation;
 import io.gatling.javaapi.http.HttpProtocolBuilder;
+
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 /**
  * Gatling {@link Simulation} test for the {@link org.cp.labs.spring.boot.SpringBootJsonWebApplication}.
@@ -59,12 +67,55 @@ public class SpringBootJsonWebApplicationGatlingSimulation extends Simulation {
 
     FeederBuilder<String> peopleFeeder = csv("people.csv").random();
 
-    ScenarioBuilder getPersonScenario = scenario("Get Person")
+    return scenario("Get Person")
       .feed(peopleFeeder)
       .exec(http("Get Person").get("/people/#{id}")
         .check(status().is(200),
           jsonPath("$.firstName").is(session -> session.get("#{firstName}")),
           jsonPath("$.lastName").is(session -> session.get("#{lastName}"))));
 
+  }
+
+  private static ScenarioBuilder runUsersScenarioTests() {
+
+    FeederBuilder<String> userFeeder = csv("users.csv").random();
+
+    return scenario("Post and Get Users")
+      .feed(userFeeder)
+      .exec(http("POST user").post("/users/#{username}")
+        .check(status().is(200)));
+  }
+
+  @Getter
+  @Setter(AccessLevel.PROTECTED)
+  @RequiredArgsConstructor(staticName = "name")
+  static class TestUser implements User<UUID> {
+
+    private Instant lastAccess;
+
+    private final String name;
+
+    @Setter(AccessLevel.PUBLIC)
+    private UUID id;
+
+    @SuppressWarnings("unchecked")
+    public TestUser identifiedBy(UUID id) {
+      setId(id);
+      return this;
+    }
+
+
+    public TestUser lastAccessNow() {
+      return lastAccessed(Instant.now());
+    }
+
+    public TestUser lastAccessed(long timestamp) {
+      return lastAccessed(Instant.ofEpochSecond(timestamp));
+    }
+
+    public TestUser lastAccessed(Instant lastAccess) {
+      setLastAccess(lastAccess);
+      return this;
+    }
   }
 }
