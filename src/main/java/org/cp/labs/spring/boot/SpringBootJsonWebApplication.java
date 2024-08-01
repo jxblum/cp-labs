@@ -57,24 +57,6 @@ public class SpringBootJsonWebApplication {
       .run(args);
   }
 
-  private static People doeFamily() {
-
-    return People.of(
-      Person.newPerson("Jon", "Doe").identifiedBy(1L),
-      Person.newPerson("Jane", "Doe").identifiedBy(2L),
-      Person.newPerson("Bob", "Doe").identifiedBy(3L),
-      Person.newPerson("Cookie", "Doe").identifiedBy(4L),
-      Person.newPerson("Dill", "Doe").identifiedBy(5L),
-      Person.newPerson("Fro", "Doe").identifiedBy(6L),
-      Person.newPerson("Hoe", "Doe").identifiedBy(7L),
-      Person.newPerson("Joe", "Doe").identifiedBy(8L),
-      Person.newPerson("Lan", "Doe").identifiedBy(9L),
-      Person.newPerson("Moe", "Doe").identifiedBy(10L),
-      Person.newPerson("Pie", "Doe").identifiedBy(11L),
-      Person.newPerson("Sour", "Doe").identifiedBy(12L)
-    );
-  }
-
   @RestController
   @Getter(AccessLevel.PROTECTED)
   @RequestMapping("/example/rest/api/")
@@ -97,5 +79,23 @@ public class SpringBootJsonWebApplication {
         .findFirst()
         .orElseThrow(() -> newIllegalArgumentException("Person with ID [%s] not found", id));
     }
+  }
+
+  private static People doeFamily() {
+
+    return People.of(
+      Person.newPerson("Jon", "Doe").identifiedBy(1L),
+      Person.newPerson("Jane", "Doe").identifiedBy(2L),
+      Person.newPerson("Bob", "Doe").identifiedBy(3L),
+      Person.newPerson("Cookie", "Doe").identifiedBy(4L),
+      Person.newPerson("Dill", "Doe").identifiedBy(5L),
+      Person.newPerson("Fro", "Doe").identifiedBy(6L),
+      Person.newPerson("Hoe", "Doe").identifiedBy(7L),
+      Person.newPerson("Joe", "Doe").identifiedBy(8L),
+      Person.newPerson("Lan", "Doe").identifiedBy(9L),
+      Person.newPerson("Moe", "Doe").identifiedBy(10L),
+      Person.newPerson("Pie", "Doe").identifiedBy(11L),
+      Person.newPerson("Sour", "Doe").identifiedBy(12L)
+    );
   }
 }
