@@ -41,23 +41,30 @@ import io.gatling.javaapi.http.HttpProtocolBuilder;
 @SuppressWarnings("unused")
 public class SpringBootJsonWebApplicationGatlingSimulation extends Simulation {
 
-  FeederBuilder<String> peopleFeeder = csv("people.csv").random();
-
-  HttpProtocolBuilder httpProtocol =  http.baseUrl("http://localhost:8080/example/rest/api")
-    .acceptHeader(MediaType.APPLICATION_JSON_VALUE)
-    .acceptLanguageHeader("en-US,en;q=0.5")
-    .contentTypeHeader(MediaType.APPLICATION_JSON_VALUE)
-    .userAgentHeader("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/119.0");
-
-  ScenarioBuilder getPersonScenario = scenario("Get Person")
-    .feed(peopleFeeder)
-    .exec(http("Get Person").get("/people/#{id}")
-      .check(status().is(200),
-        jsonPath("$.firstName").is(session -> session.get("#{firstName}")),
-        jsonPath("$.lastName").is(session -> session.get("#{lastName}"))));
-
   {
-    setUp(getPersonScenario.injectOpen(constantUsersPerSec(5).during(Duration.ofMinutes(1))))
-      .protocols(httpProtocol);
+    setUp(runPeopleScenarioTests().injectOpen(constantUsersPerSec(5).during(Duration.ofMinutes(1))))
+      .protocols(withHttpProtocol());
+  }
+
+  private static HttpProtocolBuilder withHttpProtocol() {
+
+    return http.baseUrl("http://localhost:8080/example/rest/api")
+      .acceptHeader(MediaType.APPLICATION_JSON_VALUE)
+      .acceptLanguageHeader("en-US,en;q=0.5")
+      .contentTypeHeader(MediaType.APPLICATION_JSON_VALUE)
+      .userAgentHeader("Mozilla/5.0 (Macintosh; ARM Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/119.0");
+  }
+
+  private static ScenarioBuilder runPeopleScenarioTests() {
+
+    FeederBuilder<String> peopleFeeder = csv("people.csv").random();
+
+    ScenarioBuilder getPersonScenario = scenario("Get Person")
+      .feed(peopleFeeder)
+      .exec(http("Get Person").get("/people/#{id}")
+        .check(status().is(200),
+          jsonPath("$.firstName").is(session -> session.get("#{firstName}")),
+          jsonPath("$.lastName").is(session -> session.get("#{lastName}"))));
+
   }
 }
