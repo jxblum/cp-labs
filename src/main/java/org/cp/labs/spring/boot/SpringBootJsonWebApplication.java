@@ -19,16 +19,22 @@ import static org.awaitility.Awaitility.await;
 import static org.cp.elements.lang.RuntimeExceptionsFactory.newIllegalArgumentException;
 
 import java.time.Duration;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.cp.domain.core.model.People;
 import org.cp.domain.core.model.Person;
+import org.cp.elements.security.model.User;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -62,6 +68,8 @@ public class SpringBootJsonWebApplication {
   @RequestMapping("/example/rest/api/")
   static class PeopleRestApiController {
 
+    private final ConcurrentMap<String, User> userStore = new ConcurrentHashMap<>();
+
     private final People doeFamily = doeFamily();
 
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
@@ -78,6 +86,17 @@ public class SpringBootJsonWebApplication {
         .filter(person -> person.getId().equals(id))
         .findFirst()
         .orElseThrow(() -> newIllegalArgumentException("Person with ID [%s] not found", id));
+    }
+
+    @GetMapping("/users/{username}")
+    public User<UUID> getUser(@PathVariable("username") String username) {
+      return getUserStore().get(username);
+    }
+
+    @PostMapping("/users")
+    public String storeUser(@RequestBody User<UUID> user) {
+      getUserStore().put(user.getName(), user);
+      return "{\"status\": \"SUCCESS\"";
     }
   }
 
