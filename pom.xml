@@ -74,7 +74,7 @@
 	<properties>
 		<java-module-name>org.codeprimate.labs</java-module-name>
 		<awaitility.version>4.2.0</awaitility.version>
-		<cp-domain.version>0.2.0-SNAPSHOT</cp-domain.version>
+		<cp-domain.version>0.2.0</cp-domain.version>
 		<cp-elements.version>2.0.0-M5</cp-elements.version>
 		<gatling.version>3.11.5</gatling.version>
 		<gatling-maven-plugin.version>4.9.6</gatling-maven-plugin.version>
