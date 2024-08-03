@@ -15,29 +15,38 @@
  */
 package examples.gatling;
 
+import static io.gatling.javaapi.core.CoreDsl.ElFileBody;
 import static io.gatling.javaapi.core.CoreDsl.constantUsersPerSec;
 import static io.gatling.javaapi.core.CoreDsl.csv;
 import static io.gatling.javaapi.core.CoreDsl.jsonPath;
 import static io.gatling.javaapi.core.CoreDsl.scenario;
 import static io.gatling.javaapi.http.HttpDsl.http;
 import static io.gatling.javaapi.http.HttpDsl.status;
+import static org.cp.elements.lang.RuntimeExceptionsFactory.newIllegalStateException;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.function.Function;
 
-import org.cp.elements.security.model.User;
-import org.springframework.http.MediaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import io.gatling.javaapi.core.FeederBuilder;
 import io.gatling.javaapi.core.ScenarioBuilder;
+import io.gatling.javaapi.core.Session;
 import io.gatling.javaapi.core.Simulation;
 import io.gatling.javaapi.http.HttpProtocolBuilder;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import org.cp.elements.lang.Assert;
+import org.cp.elements.lang.ObjectUtils;
+import org.cp.elements.security.model.User;
+import org.cp.labs.model.TestUser;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 
 /**
  * Gatling {@link Simulation} test for the {@link org.cp.labs.spring.boot.SpringBootJsonWebApplication}.
@@ -49,12 +58,20 @@ import lombok.Setter;
 @SuppressWarnings("unused")
 public class SpringBootJsonWebApplicationGatlingSimulation extends Simulation {
 
+  private static final ObjectMapper objectMapper = JsonMapper.builder()
+      .addModule(new Jdk8Module())
+      .addModule(new JavaTimeModule())
+      .configure(SerializationFeature.INDENT_OUTPUT, true)
+      .configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
+      .build();
+
+  // TEST
   {
-    setUp(runPeopleScenarioTests().injectOpen(constantUsersPerSec(5).during(Duration.ofMinutes(1))))
-      .protocols(withHttpProtocol());
+    setUp(runUsersScenarioTests().injectOpen(constantUsersPerSec(5).during(Duration.ofSeconds(60))))
+      .protocols(httpProtocol());
   }
 
-  private static HttpProtocolBuilder withHttpProtocol() {
+  private static HttpProtocolBuilder httpProtocol() {
 
     return http.baseUrl("http://localhost:8080/example/rest/api")
       .acceptHeader(MediaType.APPLICATION_JSON_VALUE)
@@ -62,6 +79,46 @@ public class SpringBootJsonWebApplicationGatlingSimulation extends Simulation {
       .contentTypeHeader(MediaType.APPLICATION_JSON_VALUE)
       .userAgentHeader("Mozilla/5.0 (Macintosh; ARM Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/119.0");
   }
+
+  @SuppressWarnings("all")
+  private static <T> T log(T target) {
+    System.out.printf("%s%n", target);
+    System.out.flush();
+    return target;
+  }
+
+  private static Function<Session, Session> logSessionAttribute(String attribute) {
+
+    return session -> {
+      log("Session attribute [%s] is [%s]".formatted(attribute, session.get(attribute)));
+      return session;
+    };
+  }
+
+  private static Function<Session, Session> setSessionAttribute(String attributeName, Object value) {
+    return session -> session.set(attributeName, value);
+  }
+
+  private static User<UUID> newUser(String username) {
+
+    Assert.hasText(username, "Username [%s] is required", username);
+    Assert.isFalse("#{username}".equals(username), "Username [%s] was not set", username);
+
+    return TestUser.named(username).lastAccessedNow();
+  }
+
+  private static ObjectMapper objectMapper() {
+    return objectMapper;
+  }
+
+  private static String toJson(Object target) {
+
+    return ObjectUtils.<String>doOperationSafely(args -> objectMapper().writeValueAsString(target), cause -> {
+      throw newIllegalStateException(cause, "Failed to serialize Object [%s] as JSON", target);
+    });
+  }
+
+  // TEST SCENARIOS
 
   private static ScenarioBuilder runPeopleScenarioTests() {
 
@@ -73,49 +130,31 @@ public class SpringBootJsonWebApplicationGatlingSimulation extends Simulation {
         .check(status().is(200),
           jsonPath("$.firstName").is(session -> session.get("#{firstName}")),
           jsonPath("$.lastName").is(session -> session.get("#{lastName}"))));
-
   }
 
   private static ScenarioBuilder runUsersScenarioTests() {
 
     FeederBuilder<String> userFeeder = csv("users.csv").random();
 
-    return scenario("Post and Get Users")
+    Instant now = Instant.now();
+
+    return scenario("POST and GET Users")
       .feed(userFeeder)
-      .exec(http("POST user").post("/users/#{username}")
-        .check(status().is(200)));
-  }
-
-  @Getter
-  @Setter(AccessLevel.PROTECTED)
-  @RequiredArgsConstructor(staticName = "name")
-  static class TestUser implements User<UUID> {
-
-    private Instant lastAccess;
-
-    private final String name;
-
-    @Setter(AccessLevel.PUBLIC)
-    private UUID id;
-
-    @SuppressWarnings("unchecked")
-    public TestUser identifiedBy(UUID id) {
-      setId(id);
-      return this;
-    }
-
-
-    public TestUser lastAccessNow() {
-      return lastAccessed(Instant.now());
-    }
-
-    public TestUser lastAccessed(long timestamp) {
-      return lastAccessed(Instant.ofEpochSecond(timestamp));
-    }
-
-    public TestUser lastAccessed(Instant lastAccess) {
-      setLastAccess(lastAccess);
-      return this;
-    }
+      .exec(setSessionAttribute("lastAccess", Instant.now().toEpochMilli()))
+      .exec(setSessionAttribute("token", UUID.randomUUID().toString()))
+      //.exec(logSessionAttribute("username"))
+      //.exec(logSessionAttribute("token"))
+      .exec(http("POST user").post("/users")
+          //.body(StringBody(session -> toJson(newUser(session.get("username"))))).asJson()
+          .body(ElFileBody("user.json.tmpl")).asJson()
+          .check(status().is(HttpStatus.OK.value())))
+      .pause(Duration.ofMillis(500))
+      .exec(http("GET user").get("/users/#{username}")
+          .check(status().is(HttpStatus.OK.value()),
+          //jsonPath("$.name").saveAs("usernameResponse"),
+          jsonPath("$.lastAccess").ofLong().gt(now.toEpochMilli()),
+          jsonPath("$.name").is(session -> session.get("username")),
+          jsonPath("$.token").is(session -> session.get("token"))));
+      //.exec(logSessionAttribute("usernameResponse"));
   }
 }
