@@ -33,6 +33,20 @@ import org.cp.elements.util.CollectionUtils;
 @SuppressWarnings("unused")
 public abstract class MapWrapper<KEY, VALUE> implements Map<KEY, VALUE> {
 
+  /**
+   * Factory method used to wrap the given, existing {@link Map} in a wrapper.
+   *
+   * @param <KEY> {@link Class type} of the {@link Map} {@literal key}.
+   * @param <VALUE> {@link Class type} of the {@link Map} {@literal value}.
+   * @param map {@link Map} to wrap; must not be {@literal null}.
+   * @return the wrapped {@link Map}.
+   * @throws IllegalArgumentException if {@link Map} is {@@literal null}.
+   * @see java.util.Map
+   */
+  public static <KEY, VALUE> MapWrapper<KEY, VALUE> wrap(@NotNull Map<KEY, VALUE> map) {
+    return new DefaultMapWrapper<>(map);
+  }
+
   private final Map<KEY, VALUE> map;
 
   /**
@@ -77,7 +91,7 @@ public abstract class MapWrapper<KEY, VALUE> implements Map<KEY, VALUE> {
   }
 
   @Override
-  public Set<Entry<KEY, VALUE>> entrySet() {
+  public @NotNull Set<Entry<KEY, VALUE>> entrySet() {
     return CollectionUtils.nullSafeSet(getMap().entrySet());
   }
 
@@ -130,5 +144,12 @@ public abstract class MapWrapper<KEY, VALUE> implements Map<KEY, VALUE> {
   @Override
   public String toString() {
     return getMap().toString();
+  }
+
+  protected static class DefaultMapWrapper<KEY, VALUE> extends MapWrapper<KEY, VALUE> {
+
+    protected DefaultMapWrapper(@NotNull Map<KEY, VALUE> map) {
+      super(map);
+    }
   }
 }
