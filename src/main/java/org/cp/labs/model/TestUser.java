@@ -52,6 +52,8 @@ public class TestUser implements User<UUID> {
 
 	private long lastAccess;
 
+	private Role role;
+
 	private final String name;
 
 	private String token = "#{token}";
@@ -88,8 +90,22 @@ public class TestUser implements User<UUID> {
 		return lastAccessed(lastAccessed.toInstant());
 	}
 
+	public TestUser withRole(Role role) {
+		setRole(Role.nullSafe(role));
+		return this;
+	}
+
 	public TestUser withToken(String token) {
 		setToken(token);
 		return this;
+	}
+
+	public enum Role {
+
+		ADMIN, USER, GUEST;
+
+		public static Role nullSafe(Role role) {
+			return role != null ? role : GUEST;
+		}
 	}
 }
