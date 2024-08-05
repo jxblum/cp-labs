@@ -172,6 +172,7 @@ public class TwoDimensionalMap<KEY, VALUE> extends MapWrapper<KEY, VALUE> {
     }
 
     @Override
+    @SuppressWarnings({ "all", "unchecked" })
     public Set<Entry<KEY, VALUE>> entrySet() {
 
       Set<Entry<KEY, VALUE>> mapsEntries = new HashSet<>();
