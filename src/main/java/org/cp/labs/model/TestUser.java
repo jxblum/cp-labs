@@ -61,6 +61,18 @@ public class TestUser implements User<UUID> {
 	@Setter(AccessLevel.PUBLIC)
 	private UUID id;
 
+	public TestUser asAdmin() {
+		return withRole(Role.ADMIN);
+	}
+
+	public TestUser asGuest() {
+		return withRole(Role.GUEST);
+	}
+
+	public TestUser asUser() {
+		return withRole(Role.USER);
+	}
+
 	@JsonProperty
 	@JsonFormat(pattern = LAST_ACCESS_PATTERN)
 	public ZonedDateTime getLastAccessDateTime() {
