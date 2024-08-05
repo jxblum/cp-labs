@@ -16,6 +16,7 @@
 package org.cp.labs.model.serialization.json;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -47,7 +48,15 @@ public class TestUserDeserializer extends JsonDeserializer<User> {
 		JsonNode jsonTree = jsonParser.getCodec().readTree(jsonParser);
 
 		return TestUser.named(jsonTree.get("name").asText())
-			.lastAccessed(jsonTree.get("lastAccess").asLong())
+			.lastAccessed(resolveLastAccessed(jsonTree))
+			.withRole(TestUser.Role.valueOf(jsonTree.get("role").asText()))
 			.withToken(jsonTree.get("token").asText());
+	}
+
+	private static long resolveLastAccessed(JsonNode jsonTree) {
+
+		return jsonTree.has("lastAccess")
+			? jsonTree.get("lastAccess").asLong()
+			: Instant.EPOCH.toEpochMilli();
 	}
 }
