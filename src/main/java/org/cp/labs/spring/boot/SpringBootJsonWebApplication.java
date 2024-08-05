@@ -44,6 +44,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 import org.springframework.lang.NonNull;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -186,6 +187,12 @@ public class SpringBootJsonWebApplication {
     @GetMapping("/users/{username}")
     public User<UUID> getUser(@PathVariable("username") String username) {
       return getUserStore().get(username);
+    }
+
+    @DeleteMapping("/users")
+    public String removeAllUsers() {
+      getUserStore().clear();
+      return SUCCESS_JSON;
     }
 
     @PostMapping("/users")
