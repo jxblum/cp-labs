@@ -3,5 +3,5 @@
 testname="$1"
 testname="${testname:-SpringBootJsonWebApplicationGatlingSimulation}"
 
-rm -Rf terget/gatling
+rm -Rf target/gatling
 mvn gatling:test -Dtest.simulationClass=examples.gatling.$testname
