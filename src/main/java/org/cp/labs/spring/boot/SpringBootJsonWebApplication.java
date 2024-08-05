@@ -127,7 +127,7 @@ public class SpringBootJsonWebApplication {
     }
 
     @Bean
-    Jackson2ObjectMapperBuilderCustomizer jacksonObjectMapperCustomer() {
+    Jackson2ObjectMapperBuilderCustomizer jacksonObjectMapperCustomizer() {
 
       return jacksonObjectMapperBuilder -> jacksonObjectMapperBuilder
           .featuresToEnable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)
