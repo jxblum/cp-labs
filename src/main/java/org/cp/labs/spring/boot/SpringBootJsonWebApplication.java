@@ -153,7 +153,8 @@ public class SpringBootJsonWebApplication {
 
       User<UUID> testUser = TestUser.named("testUser")
           .withToken(UUID.randomUUID().toString())
-          .lastAccessedNow();
+          .lastAccessedNow()
+          .asUser();
 
       this.userStore.put(testUser.getName(), testUser);
     }
