@@ -70,12 +70,6 @@ public class TestUser implements User<UUID> {
 		return CodeBlocks.ifElse(this.lastAccess, t -> t > 0L, Instant::ofEpochMilli, t -> Instant.now());
 	}
 
-	@SuppressWarnings("unchecked")
-	public TestUser identifiedBy(UUID id) {
-		setId(id);
-		return this;
-	}
-
 	public TestUser lastAccessedNow() {
 		return lastAccessed(Instant.now());
 	}
@@ -85,13 +79,13 @@ public class TestUser implements User<UUID> {
 		return this;
 	}
 
-	public TestUser lastAccessed(Instant lastAccess) {
-		setLastAccess(lastAccess.toEpochMilli());
+	public TestUser lastAccessed(Instant lastAccessed) {
+		setLastAccess(lastAccessed.toEpochMilli());
 		return this;
 	}
 
-	public TestUser lastAccessed(ZonedDateTime dateTime) {
-		return lastAccessed(dateTime.toInstant());
+	public TestUser lastAccessed(ZonedDateTime lastAccessed) {
+		return lastAccessed(lastAccessed.toInstant());
 	}
 
 	public TestUser withToken(String token) {
