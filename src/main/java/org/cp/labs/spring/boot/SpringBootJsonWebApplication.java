@@ -195,6 +195,11 @@ public class SpringBootJsonWebApplication {
       return SUCCESS_JSON;
     }
 
+    @DeleteMapping("/users/{username}")
+    public User<UUID> removeUser(@PathVariable("username") String username) {
+      return getUserStore().remove(username);
+    }
+
     @PostMapping("/users")
     public String storeUser(@RequestParam(name = "lastAccess", required = false) Long lastAccess,
           @RequestBody User<UUID> user) {
