@@ -49,6 +49,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -80,6 +81,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SpringBootJsonWebApplication {
 
   private static final boolean DEBUG = false;
+
+  protected static final String SUCCESS_JSON = "{\"status\": \"SUCCESS\"}";
 
   public static final String SPRING_APPLICATION_PROFILE = "json-spring-web-application";
 
@@ -185,9 +188,16 @@ public class SpringBootJsonWebApplication {
     }
 
     @PostMapping("/users")
-    public String storeUser(@RequestBody User<UUID> user) {
+    public String storeUser(@RequestParam(name = "lastAccess", required = false) Long lastAccess,
+          @RequestBody User<UUID> user) {
+
+      user = lastAccess != null && user instanceof TestUser testUser
+          ? testUser.lastAccessed(lastAccess)
+          : user;
+
       getUserStore().put(user.getName(), user);
-      return "{\"status\": \"SUCCESS\"";
+
+      return SUCCESS_JSON;
     }
   }
 
