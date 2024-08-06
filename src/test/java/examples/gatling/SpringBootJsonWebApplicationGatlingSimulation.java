@@ -26,8 +26,13 @@ import static org.cp.elements.lang.RuntimeExceptionsFactory.newIllegalStateExcep
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -65,9 +70,14 @@ public class SpringBootJsonWebApplicationGatlingSimulation extends Simulation {
       .configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
       .build();
 
+  private static final String USER_DATA = "users.csv";
+  private static final String USER_JSON_TEMPLATE = "user-partial.json.tmpl";
+
+  private static final ThreadLocalRandom random = ThreadLocalRandom.current();
+
   // TEST
   {
-    setUp(runUsersScenarioTests().injectOpen(constantUsersPerSec(5).during(Duration.ofSeconds(60))))
+    setUp(runUsersScenarioTests().injectOpen(constantUsersPerSec(10).during(Duration.ofSeconds(60))))
       .protocols(httpProtocol());
   }
 
@@ -111,6 +121,11 @@ public class SpringBootJsonWebApplicationGatlingSimulation extends Simulation {
     return objectMapper;
   }
 
+  private static TestUser.Role randomRole() {
+    TestUser.Role[] roles = TestUser.Role.values();
+    return roles[random.nextInt(roles.length)];
+  }
+
   private static String toJson(Object target) {
 
     return ObjectUtils.<String>doOperationSafely(args -> objectMapper().writeValueAsString(target), cause -> {
@@ -132,29 +147,42 @@ public class SpringBootJsonWebApplicationGatlingSimulation extends Simulation {
           jsonPath("$.lastName").is(session -> session.get("#{lastName}"))));
   }
 
+  @SuppressWarnings("all")
   private static ScenarioBuilder runUsersScenarioTests() {
 
-    FeederBuilder<String> userFeeder = csv("users.csv").random();
+    FeederBuilder<String> userFeeder = csv(USER_DATA).eager().random();
+
+    Supplier<Map<String, Object>> userMetadataSupplier = () -> Map.of(
+    "lastAccess", Instant.now().toEpochMilli(),
+    "role", randomRole(),
+    "token", UUID.randomUUID().toString()
+    );
+
+    Iterator<Map<String, Object>> userMetadataIterator = Stream.generate(userMetadataSupplier).iterator();
 
     Instant now = Instant.now();
 
+    // NOTE: Cannot assert User lastAccess, role and token properties when testing with multiple users (sessions).
+    // lastAccess, role and token values are dynamically generated, constantly changing per HTTP (GET) request
+    // and per (concurrent) user.
+    // Assertions to work correctly when testing with a single user (session).
     return scenario("POST and GET Users")
-      .feed(userFeeder)
-      .exec(setSessionAttribute("lastAccess", Instant.now().toEpochMilli()))
-      .exec(setSessionAttribute("token", UUID.randomUUID().toString()))
-      //.exec(logSessionAttribute("username"))
-      //.exec(logSessionAttribute("token"))
-      .exec(http("POST user").post("/users")
-          //.body(StringBody(session -> toJson(newUser(session.get("username"))))).asJson()
-          .body(ElFileBody("user.json.tmpl")).asJson()
-          .check(status().is(HttpStatus.OK.value())))
-      .pause(Duration.ofMillis(500))
-      .exec(http("GET user").get("/users/#{username}")
-          .check(status().is(HttpStatus.OK.value()),
-          //jsonPath("$.name").saveAs("usernameResponse"),
-          jsonPath("$.lastAccess").ofLong().gt(now.toEpochMilli()),
-          jsonPath("$.name").is(session -> session.get("username")),
-          jsonPath("$.token").is(session -> session.get("token"))));
-      //.exec(logSessionAttribute("usernameResponse"));
+        .feed(userFeeder)
+        .feed(userMetadataIterator)
+        //.exec(logSessionAttribute("token"))
+        .exec(http("POST user").post("/users")
+            .queryParam("lastAccess", "#{lastAccess}")
+            //.body(StringBody(session -> toJson(newUser(session.get("username"))))).asJson()
+            .body(ElFileBody(USER_JSON_TEMPLATE)).asJson()
+            .check(status().is(HttpStatus.OK.value())))
+        .pause(Duration.ofMillis(500))
+        .exec(http("GET user").get("/users/#{username}")
+            .check(status().is(HttpStatus.OK.value()),
+                //jsonPath("$.name").saveAs("responseUsername"),
+                jsonPath("$.name").is(session -> session.get("username"))));
+                //jsonPath("$.lastAccess").ofLong().gt(now.toEpochMilli()),
+                //jsonPath("$.role").isEL("#{role}"),
+                //jsonPath("$.token").is(session -> session.get("token"))));
+        //.exec(logSessionAttribute("responseUsername"));
   }
 }
