@@ -39,7 +39,7 @@ import org.springframework.boot.jackson.JsonComponent;
  */
 @JsonComponent
 @SuppressWarnings("unused")
-public class TestUserDeserializer extends JsonDeserializer<User> {
+public class TestUserDeserializer extends JsonDeserializer<User<UUID>> {
 
 	@Override
 	public User<UUID> deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
