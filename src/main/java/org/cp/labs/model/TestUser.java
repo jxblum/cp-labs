@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import org.cp.elements.lang.CodeBlocks;
 import org.cp.elements.security.model.User;
@@ -38,12 +39,12 @@ import lombok.Setter;
  *
  * @author John Blum
  * @see org.cp.elements.security.model.User
- * @see java.time.Instant
  * @see java.util.UUID
  */
 @Getter
 @Setter(AccessLevel.PROTECTED)
 @JsonIgnoreProperties({ "new", "notNew" })
+@JsonPropertyOrder({ "name", "lastAccess", "lastAccessDateTime", "role", "token" })
 @RequiredArgsConstructor(staticName = "named")
 @SuppressWarnings("unused")
 public class TestUser implements User<UUID> {
