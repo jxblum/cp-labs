@@ -23,15 +23,15 @@ import lombok.Getter;
  * @author Joh Blum
  */
 @Getter(AccessLevel.PROTECTED)
-public class HelloWorldServer {
+public class HelloWorldServer implements Runnable {
 
 	public static final int PORT = 21051;
 
 	protected static final Duration TIMEOUT = Duration.ofSeconds(15);
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
 		HelloWorldServer server = new HelloWorldServer();
-		server.start();
+		server.run();
 		server.block();
 	}
 
@@ -47,14 +47,36 @@ public class HelloWorldServer {
 			.build();
 	}
 
-	public void block() throws InterruptedException {
-		getServer().awaitTermination();
+	public void block() {
+
+		try {
+			getServer().awaitTermination();
+		}
+		catch (InterruptedException e) {
+			throw new RuntimeException("Failed to wait on server termination", e);
+		}
+	}
+
+	private void print(String message, Object... args) {
+		System.out.printf(message, args);
+		System.out.flush();
+	}
+
+	@Override
+	public void run() {
+
+		try {
+			start();
+		}
+		catch (IOException e) {
+			throw new RuntimeException("Failed to start server", e);
+		}
 	}
 
 	public void start() throws IOException {
 		Server server = getServer().start();
 		Runtime.getRuntime().addShutdownHook(shutdownHookThread());
-		System.out.printf("gRPC Server started; listening on port [%d]%n", server.getPort());
+		print("gRPC Server started; listening on port [%d]%n", server.getPort());
 	}
 
 	private Thread shutdownHookThread() {
@@ -66,10 +88,10 @@ public class HelloWorldServer {
 		return () -> {
 			try {
 				stop();
-				System.out.println("gRPC Server shutdown");
+				print("gRPC Server shutdown%n");
 			}
 			catch (InterruptedException e) {
-				System.err.printf("Failed to stop gRPC Server listening on port [%d]%n", getServer().getPort());
+				print("Failed to stop gRPC Server listening on port [%d]%n", getServer().getPort());
 				Thread.currentThread().interrupt();
 			}
 		};
