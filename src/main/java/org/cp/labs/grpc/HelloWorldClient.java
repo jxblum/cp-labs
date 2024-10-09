@@ -39,10 +39,15 @@ public class HelloWorldClient {
 	public void sayHello(String name) {
 		HelloRequest request = newRequest(name);
 		HelloResponse response = getServerProxy().sayHello(request);
-		System.out.println(response.getMessage());
+		print(response.getMessage());
 	}
 
 	private HelloRequest newRequest(String name) {
 		return HelloRequest.newBuilder().setName(name).build();
+	}
+
+	private void print(String message, Object... args) {
+		System.out.printf(message, args);
+		System.out.flush();
 	}
 }
