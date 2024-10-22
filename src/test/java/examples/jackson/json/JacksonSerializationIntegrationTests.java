@@ -23,8 +23,11 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import org.junit.jupiter.api.Test;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
@@ -34,7 +37,7 @@ import lombok.ToString;
  * @see com.fasterxml.jackson.databind.json.JsonMapper
  * @author John Blum
  */
-public class JacksonDeserializationIntegrationTests {
+public class JacksonSerializationIntegrationTests {
 
 	private final JsonMapper objectMapper = JsonMapper.builder()
 		.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -58,9 +61,25 @@ public class JacksonDeserializationIntegrationTests {
 		assertThat(person.getLastName()).isEqualTo("Doe");
 	}
 
+	@Test
+	void serializingObjectToJsonWithNullValues() throws JsonProcessingException {
+
+		Person jon = Person.builder().firstName("Jon").build();
+
+		String expectedJson = "{\"firstName\":\"%s\"}".formatted(jon.getFirstName());
+
+		String actualJson= this.objectMapper.writeValueAsString(jon);
+
+		assertThat(actualJson).isEqualTo(expectedJson);
+	}
+
 	@Getter
+	@Builder
 	@ToString
 	@EqualsAndHashCode
+	@NoArgsConstructor
+	@AllArgsConstructor
+	//@JsonInclude(JsonInclude.Include.NON_NULL)
 	//@JsonIgnoreProperties(ignoreUnknown = true)
 	static class Person {
 
