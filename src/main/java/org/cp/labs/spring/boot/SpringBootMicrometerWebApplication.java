@@ -88,12 +88,13 @@ public class SpringBootMicrometerWebApplication {
 			return getUsers().stream().sorted(Comparator.comparing(User::getName)).toList();
 		}
 
-		@Counted
+		@Counted("get.user.count")
 		@GetMapping("/users/{name}")
 		public TestUser getUser(@PathVariable("name") String username) {
 
-			Counter countUsers = Counter.builder("user.count")
-				.register(getMeterRegistry());
+			Counter.builder("user.count")
+				.register(getMeterRegistry())
+				.increment();
 
 			return getUsers().stream()
 				.filter(user -> user.getName().equalsIgnoreCase(username))
