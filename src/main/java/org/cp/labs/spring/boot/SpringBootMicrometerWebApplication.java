@@ -21,7 +21,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.observation.ObservationRegistry;
 
 import org.cp.elements.security.model.User;
 import org.cp.labs.model.TestUser;
@@ -36,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author John Blum
@@ -62,10 +66,22 @@ public class SpringBootMicrometerWebApplication {
 
 	@RestController
 	@RequestMapping("/api")
+	@RequiredArgsConstructor
 	@Getter(AccessLevel.PROTECTED)
 	static class UserController {
 
+		static final String PONG = "PONG";
+
+		private final MeterRegistry meterRegistry;
+
+		private final ObservationRegistry observationRegistry;
+
 		private final Set<TestUser> users = new ConcurrentSkipListSet<>();
+
+		@GetMapping("/ping")
+		public String ping() {
+			return PONG;
+		}
 
 		@GetMapping("/users")
 		public List<TestUser> allUsers() {
@@ -75,6 +91,9 @@ public class SpringBootMicrometerWebApplication {
 		@Counted
 		@GetMapping("/users/{name}")
 		public TestUser getUser(@PathVariable("name") String username) {
+
+			Counter countUsers = Counter.builder("user.count")
+				.register(getMeterRegistry());
 
 			return getUsers().stream()
 				.filter(user -> user.getName().equalsIgnoreCase(username))
