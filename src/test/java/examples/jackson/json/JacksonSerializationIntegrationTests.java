@@ -17,6 +17,7 @@ package examples.jackson.json;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -62,6 +63,22 @@ public class JacksonSerializationIntegrationTests {
 	}
 
 	@Test
+	void deserializationOfJsonWithMissingFields() throws JsonProcessingException {
+
+		String JSON = """
+			{
+			  "firstName": "Jon"
+		  	}
+			""";
+
+		Person person = this.objectMapper.readValue(JSON, Person.class);
+
+		assertThat(person).isNotNull();
+		assertThat(person.getFirstName()).isEqualTo("Jon");
+		assertThat(person.getLastName()).isNull();
+	}
+
+	@Test
 	void serializingObjectToJsonWithNullValues() throws JsonProcessingException {
 
 		Person jon = Person.builder().firstName("Jon").build();
@@ -79,7 +96,7 @@ public class JacksonSerializationIntegrationTests {
 	@EqualsAndHashCode
 	@NoArgsConstructor
 	@AllArgsConstructor
-	//@JsonInclude(JsonInclude.Include.NON_NULL)
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	//@JsonIgnoreProperties(ignoreUnknown = true)
 	static class Person {
 
