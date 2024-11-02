@@ -25,6 +25,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
@@ -36,10 +37,12 @@ import org.cp.elements.lang.annotation.Immutable;
 import org.cp.elements.lang.annotation.NotNull;
 import org.cp.elements.lang.annotation.Nullable;
 
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 /**
  * The {@link Java8MethodReferenceUnitTests} class is an example of perhaps one fundamental misconception
@@ -90,6 +93,16 @@ import lombok.RequiredArgsConstructor;
  * @since 1.0.0
  */
 public class Java8MethodReferenceUnitTests {
+
+	@Test
+	void setThrowsNullPointerException() {
+
+		ValueWrapper<Object> wrapper = null;
+
+		assertThatNullPointerException()
+			.isThrownBy(() -> doSet(wrapper, "test", wrapper::setValue))
+			.withNoCause();
+	}
 
 	@Test
 	@SuppressWarnings("all")
@@ -161,6 +174,12 @@ public class Java8MethodReferenceUnitTests {
 		assertThatNullPointerException()
 			.isThrownBy(deserializedPersonWrapper::getUnsafeName)
 			.withNoCause();
+	}
+
+	static <T> void doSet(ValueWrapper<T> wrapper, T value, Consumer<T> consumer) {
+		if (wrapper != null) {
+			consumer.accept(value);
+		}
 	}
 
 	@Getter
@@ -249,5 +268,11 @@ public class Java8MethodReferenceUnitTests {
 			this.name = name;
 			return this;
 		}
+	}
+
+	@Getter(AccessLevel.PACKAGE)
+	@Setter(AccessLevel.PACKAGE)
+	static class ValueWrapper<T> {
+		private T value;
 	}
 }
